@@ -30,6 +30,42 @@ void dg_echo(int sockfd) {
 			exit(3);
 		}
 
+		// while looping for any OPs, receives some OP
+		// checks OP type and sees its a read request
+		// use sendTo to send a file to the client
+		// once packet is sent wait for acknowledgement
+		// after acknowledgement, return to loop
+
+		/*if (n.OPCode == "RRQ") {
+		    if (sendto(sockfd, mesg, n, 0, &pcli_addr, clilen) != n) {
+		   		printf("%s: sendto error\n",progname);
+		   		exit(4);
+		   	}
+		   	// bool receivedAck
+		 	// set timer, approx 3 RTT
+		 	while(!recievedAck) {
+		 		m = recvfrom(sockfd, mesg, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
+				if (m < 0) {
+					printf("%s: recvfrom error\n",progname);
+					exit(5);
+				}
+				else
+				if (m did recieve an ack) {
+					receivedAck = true;
+				}
+				if (timer is done) {
+					reset timer
+					if (sendto(sockfd, mesg, n, 0, &pcli_addr, clilen) != n) {
+		   				printf("%s: sendto error\n",progname);
+		   				exit(4);
+		   			}
+				}
+		 	}
+
+		 }*/
+
+
+
 		if (sendto(sockfd, mesg, n, 0, &pcli_addr, clilen) != n) {
 			printf("%s: sendto error\n",progname);
 			exit(4);
