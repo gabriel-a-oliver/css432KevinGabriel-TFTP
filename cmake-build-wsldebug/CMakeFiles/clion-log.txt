@@ -1,0 +1,4 @@
+C:\Windows\system32\wsl.exe --distribution Ubuntu --exec /bin/sh -c "export CLION_IDE=TRUE && export JETBRAINS_IDE=TRUE && cd /mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-build-wsldebug && /home/olivergabe/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G 'CodeBlocks - Unix Makefiles' /mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-build-wsldebug

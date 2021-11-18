@@ -1,0 +1,4 @@
+C:\Users\olive\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\212.5457.51\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - NMake Makefiles" C:\Users\olive\Documents\GitHub\css432KevinGabriel
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-build-debug

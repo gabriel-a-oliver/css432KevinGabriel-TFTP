@@ -36,7 +36,8 @@ void dg_echo(int sockfd) {
 		// once packet is sent wait for acknowledgement
 		// after acknowledgement, return to loop
 
-		/*if (n.OPCode == "RRQ") {
+
+/*if (n.OPCode == "RRQ") {
 		    if (sendto(sockfd, mesg, n, 0, &pcli_addr, clilen) != n) {
 		   		printf("%s: sendto error\n",progname);
 		   		exit(4);
@@ -63,6 +64,7 @@ void dg_echo(int sockfd) {
 		 	}
 
 		 }*/
+
 
 
 
