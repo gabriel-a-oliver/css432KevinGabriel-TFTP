@@ -11,6 +11,7 @@
 #include <string.h>         // for strerror function.
 #include <signal.h>         // for the signal handler registration.
 #include <unistd.h>
+#include <iostream>
 
 // to be moved to shared tftp file
 #define RRQ	1
@@ -22,42 +23,65 @@
 
 #include "tftp.h"
 
-void DetermineOP(char op) {
+void tftp::ProcessOP(char op, char *bufpoint, char buffer[512]) {
 
 
-	//
-	// working on
-	//
-	//char op; // temporary for now, will initialize from arguments
+	switch (op) {
+		case 'r':
+			*(short *)buffer = htons(RRQ);
+			bufpoint = buffer + 2; // move pointer to file name
+			strcpy(bufpoint, "test.txt"); // add file name to buffer
+			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
+			strcpy(bufpoint, "octet"); // add mode to buffer
+			bufpoint += strlen("octet") + 1; // move pointer and add null byte
+		case 'w':
+			*(short *)buffer = htons(WRQ);
+			bufpoint = buffer + 2; // move pointer to file name
+			strcpy(bufpoint, "test.txt"); // add file name to buffer
+			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
+			strcpy(bufpoint, "octet"); // add mode to buffer
+			bufpoint += strlen("octet") + 1; // move pointer and add null byte
+		case 'd':
+			*(short *)buffer = htons(DATA);
+			bufpoint = buffer + 2; // move pointer to file name
+			strcpy(bufpoint, "test.txt"); // add file name to buffer
+			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
+			strcpy(bufpoint, "octet"); // add mode to buffer
+			bufpoint += strlen("octet") + 1; // move pointer and add null byte
+		case 'a':
+			*(short *)buffer = htons(ACK);
+			bufpoint = buffer + 2; // move pointer to file name
+			strcpy(bufpoint, "test.txt"); // add file name to buffer
+			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
+			strcpy(bufpoint, "octet"); // add mode to buffer
+			bufpoint += strlen("octet") + 1; // move pointer and add null byte
+		case 'e':
+			*(short *)buffer = htons(ERROR);
+			bufpoint = buffer + 2; // move pointer to file name
+			strcpy(bufpoint, "test.txt"); // add file name to buffer
+			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
+			strcpy(bufpoint, "octet"); // add mode to buffer
+			bufpoint += strlen("octet") + 1; // move pointer and add null byte
+		default:
+			std::cout << "Error, non-supported OP code: " << op << std::endl;
+			exit(4);
+	}
+
+}
+
+void tftp::ProcessMessage() {
+	char op; // temporary for now, will initialize from arguments
 	char *bufpoint; // for building packet
 	char buffer[512]; // buffer with arbituary 512 size
-	if (op == 'r') {
-		*(short *)buffer = htons(RRQ);
-		bufpoint = buffer + 2; // move pointer to file name
-		strcpy(bufpoint, "test.txt"); // add file name to buffer
-		bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-		strcpy(bufpoint, "octet"); // add mode to buffer
-		bufpoint += strlen("octet") + 1; // move pointer and add null byte
-	}
-	if (op == 'w') {
-		*(short *)buffer = htons(WRQ);
-		bufpoint = buffer + 2; // move pointer to file name
-		strcpy(bufpoint, "test.txt"); // add file name to buffer
-		bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-		strcpy(bufpoint, "octet"); // add mode to buffer
-		bufpoint += strlen("octet") + 1; // move pointer and add null byte
-	}
-	//
-	//
-	//
+
+	ProcessOP(op, bufpoint, buffer);
+}
+
+void ReadRequest() {
 
 }
 
-void RRQ() {
-
-}
-
-void WRQ() {
+void WriteRequest() {
 
 }
 

@@ -15,19 +15,26 @@
 #include <signal.h>         // for the signal handler registration.
 #include <unistd.h>
 
+
+class tftp {
+
 // to be moved to shared tftp file
-#define RRQ	1
+#define RRQ 1
 #define WRQ 2
 #define DATA 3
 #define ACK 4
-#define	ERROR 5
+#define ERROR 5
 
-void RRQ();
-void WRQ();
+	static void ProcessOP(char op, char *bufpoint, char buffer[512]);
+	static void ProcessMessage();
 
-void Ack();
-void Err();
+	void ReadRequest();
+	void WriteRequest();
+
+	void Ack();
+
+	void Err();
 
 
-
+};
 #endif //CSS432KEVINGABRIEL_TFTP_H
