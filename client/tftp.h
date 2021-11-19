@@ -6,11 +6,11 @@
 #define CSS432KEVINGABRIEL_TFTP_H
 
 
-public void RRQ();
-public void WRQ();
+void RRQ();
+void WRQ();
 
-public void Ack();
-public void Err();
+void Ack();
+void Err();
 
 
 

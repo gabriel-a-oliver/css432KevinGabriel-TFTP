@@ -10,7 +10,7 @@ void DetermineOP() {
 	//
 	// working on
 	//
-	char op; // temporary for now, will initialize from arguments
+	/*char op; // temporary for now, will initialize from arguments
 	char *bufpoint; // for building packet
 	char buffer[512]; // buffer with arbituary 512 size
 	if (op == 'r') {
@@ -31,7 +31,7 @@ void DetermineOP() {
 	}
 	//
 	//
-	//
+	//*/
 
 }
 
