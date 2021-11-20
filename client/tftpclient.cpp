@@ -81,20 +81,20 @@ int main(int argc, char *argv[])
     char buffer[512]; // buffer with arbituary 512 size
     if (op == 'r') {
         *(short *)buffer = htons(RRQ);
-        bufpoint = buffer + 2; // move pointer to file name
-        strcpy(bufpoint, "test.txt"); // add file name to buffer
-        bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-        strcpy(bufpoint, "octet"); // add mode to buffer
-        bufpoint += strlen("octet") + 1; // move pointer and add null byte
     }
     if (op == 'w') {
         *(short *)buffer = htons(WRQ);
-        bufpoint = buffer + 2; // move pointer to file name
-        strcpy(bufpoint, "test.txt"); // add file name to buffer
-        bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-        strcpy(bufpoint, "octet"); // add mode to buffer
-        bufpoint += strlen("octet") + 1; // move pointer and add null byte
     }
+    bufpoint = buffer + 2; // move pointer to file name
+    strcpy(bufpoint, "test.txt"); // add file name to buffer
+    bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
+    strcpy(bufpoint, "octet"); // add mode to buffer
+    bufpoint += strlen("octet") + 1; // move pointer and add null byte
+
+    sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+
+    // if RRQ, call tftp shared receiving function 
+    // if WRQ, call tftp shared sending function
     //
     //
     //
