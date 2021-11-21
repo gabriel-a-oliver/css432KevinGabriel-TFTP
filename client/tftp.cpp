@@ -19,76 +19,75 @@
 #define DATA 3
 #define ACK 4
 #define	ERROR 5
-
+#define MAXMESG 512
 
 #include "tftp.h"
 
-void tftp::ProcessOP(char op, char *bufpoint, char buffer[512]) {
 
-
-	switch (op) {
-		case 'r':
-			*(short *)buffer = htons(RRQ);
-			bufpoint = buffer + 2; // move pointer to file name
-			strcpy(bufpoint, "test.txt"); // add file name to buffer
-			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-			strcpy(bufpoint, "octet"); // add mode to buffer
-			bufpoint += strlen("octet") + 1; // move pointer and add null byte
-		case 'w':
-			*(short *)buffer = htons(WRQ);
-			bufpoint = buffer + 2; // move pointer to file name
-			strcpy(bufpoint, "test.txt"); // add file name to buffer
-			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-			strcpy(bufpoint, "octet"); // add mode to buffer
-			bufpoint += strlen("octet") + 1; // move pointer and add null byte
-		case 'd':
-			*(short *)buffer = htons(DATA);
-			bufpoint = buffer + 2; // move pointer to file name
-			strcpy(bufpoint, "test.txt"); // add file name to buffer
-			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-			strcpy(bufpoint, "octet"); // add mode to buffer
-			bufpoint += strlen("octet") + 1; // move pointer and add null byte
-		case 'a':
-			*(short *)buffer = htons(ACK);
-			bufpoint = buffer + 2; // move pointer to file name
-			strcpy(bufpoint, "test.txt"); // add file name to buffer
-			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-			strcpy(bufpoint, "octet"); // add mode to buffer
-			bufpoint += strlen("octet") + 1; // move pointer and add null byte
-		case 'e':
-			*(short *)buffer = htons(ERROR);
-			bufpoint = buffer + 2; // move pointer to file name
-			strcpy(bufpoint, "test.txt"); // add file name to buffer
-			bufpoint += strlen("test.txt") + 1; //move pointer and add null byte
-			strcpy(bufpoint, "octet"); // add mode to buffer
-			bufpoint += strlen("octet") + 1; // move pointer and add null byte
-		default:
-			std::cout << "Error, non-supported OP code: " << op << std::endl;
-			exit(4);
+void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
+	int n, m, clilen;
+	// Send Data
+	char buffer[MAXMESG];
+	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+	if (m < 0) {
+		printf("%s: sendto error\n");
+		exit(3);
 	}
+	// Perform more header checks HERE
 
+	// Pack message(s) into data from file
+
+	// Receive Acknowledgement
+	char mesg[MAXMESG];
+	clilen = sizeof(struct sockaddr);
+	n = recvfrom(sockfd, mesg, MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
+	if (n < 0) {
+		printf("%s: recvfrom error\n");
+		exit(4);
+	}
 }
 
-void tftp::ProcessMessage() {
-	char op; // temporary for now, will initialize from arguments
+
+void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
+	int n, m, clilen;
+	char mesg[MAXMESG];
+	clilen = sizeof(struct sockaddr);
+
+	// Receive Data
+	n = recvfrom(sockfd, mesg, MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
+	if (n < 0) {
+		printf("%s: recvfrom error\n");
+		exit(3);
+	}
+	// Perform more header checks HERE
+
+	// Unpack message for data
+
+	// Send Acknowledgement
+	char buffer[MAXMESG];
+	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+	if (m < 0) {
+		printf("%s: sendto error\n");
+		exit(3);
+	}
+}
+
+char* tftp::BuildAckMessage(int blockNumber) {
 	char *bufpoint; // for building packet
 	char buffer[512]; // buffer with arbituary 512 size
+	*(short *)buffer = htons(ACK);
+	bufpoint = buffer + 2; // move pointer to file name
+	*(short *)buffer = htons(blockNumber);
 
-	ProcessOP(op, bufpoint, buffer);
+	return buffer;
 }
 
-void ReadRequest() {
+char* tftp::BuildErrMessage(int blockNumber) {
+	char *bufpoint; // for building packet
+	char buffer[512]; // buffer with arbituary 512 size
+	*(short *)buffer = htons(ERROR);
+	bufpoint = buffer + 2; // move pointer to file name
+	*(short *)buffer = htons(blockNumber);
 
-}
-
-void WriteRequest() {
-
-}
-
-void Ack() {
-
-}
-
-void Err() {
-
+	return buffer;
 }

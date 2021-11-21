@@ -25,16 +25,11 @@ class tftp {
 #define ACK 4
 #define ERROR 5
 
-	static void ProcessOP(char op, char *bufpoint, char buffer[512]);
-	static void ProcessMessage();
 
-	void ReadRequest();
-	void WriteRequest();
-
-	void Ack();
-
-	void Err();
-
+	static void SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr);
+	static void ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr);
+	static char* BuildAckMessage(int blockNumber);
+	static char* BuildErrMessage(int blockNumber);
 
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H
