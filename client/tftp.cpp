@@ -24,18 +24,20 @@
 #include "tftp.h"
 
 
-void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
+void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr /*fileName to be sent*/) {
+	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
+
 	int n, m, clilen;
-	// Send Data
 	char buffer[MAXMESG];
+
+	// Pack message(s) into data from file
+
+	// Send message(s)
 	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 	if (m < 0) {
 		printf("%s: sendto error\n");
 		exit(3);
 	}
-	// Perform more header checks HERE
-
-	// Pack message(s) into data from file
 
 	// Receive Acknowledgement
 	char mesg[MAXMESG];
@@ -45,10 +47,18 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 		printf("%s: recvfrom error\n");
 		exit(4);
 	}
+	// Perform more header checks HERE
+	/*
+	if (some issue) {
+		buffer = BuildErrMessage(int blockNumber, reinterpret_cast<char **>(buffer))
+	} else { track acknowledgements}
+	*/
 }
 
 
 void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
+	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
+
 	int n, m, clilen;
 	char mesg[MAXMESG];
 	clilen = sizeof(struct sockaddr);
@@ -59,12 +69,19 @@ void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receivi
 		printf("%s: recvfrom error\n");
 		exit(3);
 	}
-	// Perform more header checks HERE
 
-	// Unpack message for data
+	char buffer[MAXMESG];
+	// Perform more header checks HERE
+	/*
+	 if (some issue) {
+	 	buffer = BuildErrMessage(int blockNumber, reinterpret_cast<char **>(buffer))
+	 } else { build acknowledgement}
+	 */
+	BuildAckMessage(/*Get Block Number*/1, reinterpret_cast<char **>(buffer));
+
+	// Unpack message for data //
 
 	// Send Acknowledgement
-	char buffer[MAXMESG];
 	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 	if (m < 0) {
 		printf("%s: sendto error\n");
@@ -72,22 +89,18 @@ void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receivi
 	}
 }
 
-char* tftp::BuildAckMessage(int blockNumber) {
+void tftp::BuildAckMessage(int blockNumber, char* buffer[MAXMESG]) {
 	char *bufpoint; // for building packet
-	char buffer[512]; // buffer with arbituary 512 size
-	*(short *)buffer = htons(ACK);
-	bufpoint = buffer + 2; // move pointer to file name
+	//char buffer[MAXMESG]; // buffer with arbituary 512 size
+	*(short *)*buffer = htons(ACK);
+	bufpoint = *buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
-
-	return buffer;
 }
 
-char* tftp::BuildErrMessage(int blockNumber) {
+void tftp::BuildErrMessage(int blockNumber, char* buffer[MAXMESG]) {
 	char *bufpoint; // for building packet
-	char buffer[512]; // buffer with arbituary 512 size
-	*(short *)buffer = htons(ERROR);
-	bufpoint = buffer + 2; // move pointer to file name
+	//char buffer[512]; // buffer with arbituary 512 size
+	*(short *)*buffer = htons(ERROR);
+	bufpoint = *buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
-
-	return buffer;
 }
