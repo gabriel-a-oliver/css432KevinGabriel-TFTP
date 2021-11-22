@@ -34,7 +34,7 @@ public:
 
 private:
 	static int SendMessageHelper(int sockfd, sockaddr_in receiving_addr, char* fileName);
-	static char* ReceiveAcknowledgementHelper(int sockfd, sockaddr sending_addr);
+	static char* ReceivePacketHelper(int sockfd, sockaddr sending_addr);
 
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H

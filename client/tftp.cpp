@@ -55,7 +55,7 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 
 	// Hopefully, Receive Acknowledgement
 	char* mesg;
-	mesg = ReceiveAcknowledgementHelper(sockfd, sending_addr);
+	mesg = ReceivePacketHelper(sockfd, sending_addr);
 	// break down the package to see if its an ACK or something else.
 	int receivedOPCode = std::stoi(std::string(1,mesg[0]) + mesg[1]);
 	if (receivedOPCode == ACK) {
@@ -76,32 +76,64 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 // This function is called if the server receives a WRQ
 // or if the client sends an RRQ
 void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
+	/* General idea:
+	 * receive the socket, the origin address, the recipient's address, and the name of the file want to receive
+	 *
+	 * in a loop: can ignore loop implementation for now, just need to receive one packet
+	 *
+	 * 		wait for data packet
+	 * 		check if it is a data packet
+	 * 			perform various checks and management functions
+	 *
+	 * 		store data into desired file
+	 *
+	 * 		create ack packet
+	 *		send ack packet
+	 *
+	 *		wait for no retransmissions
+	 *			check for anything regarding this
+	 *
+	 * */
+
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 
-	int n, m, clilen;
-	char mesg[MAXMESG];
-	clilen = sizeof(struct sockaddr);
 
+
+
+
+
+
+	int n, m, clilen;
+	char* mesg;
+	clilen = sizeof(struct sockaddr);
 	// Receive Data
-	n = recvfrom(sockfd, mesg, MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
-	if (n < 0) {
-		printf(": recvfrom error\n");
-		exit(3);
+	mesg = ReceivePacketHelper(sockfd, sending_addr);
+	// Check if receivedpacket is a DATA packet
+	int receivedOPCode = std::stoi(std::string(1,mesg[0]) + mesg[1]);
+	if (receivedOPCode == DATA) {
+		std::string blockNumString = std::string(1, mesg[2]) + mesg[3];
+		std::cout << "Data Received! Block Number: " << blockNumString << std::endl;
+	} else {
+		std::cout << "DATA not received" << std::endl;
 	}
 
-	char buffer[MAXMESG];
 	// Perform more header checks HERE
 	/*
 	 if (some issue) {
 	 	buffer = BuildErrMessage(int blockNumber, reinterpret_cast<char **>(buffer))
 	 } else { build acknowledgement}
-	 */
+	*/
+
+
+	//// STILL NEEDS WORK ////////////////////////
+	// assuming it received a data packet
+	char* buffer[MAXMESG];
 	BuildAckMessage(/*Get Block Number*/1, reinterpret_cast<char **>(buffer));
 
 	// Unpack message for data //
 
 	// Send Acknowledgement
-	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+	m = sendto(sockfd, *buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 	if (m < 0) {
 		printf(": sendto error\n");
 		exit(3);
@@ -171,10 +203,10 @@ int tftp::SendMessageHelper(int sockfd, sockaddr_in receiving_addr, char* fileNa
 }
 
 // returns the content of the byteStream already interpreted as a char*
-char* tftp::ReceiveAcknowledgementHelper(int sockfd, sockaddr sending_addr) {
+char* tftp::ReceivePacketHelper(int sockfd, sockaddr sending_addr) {
 	int n; // for debugging
 	int clilen;
-	uint16_t mesg;
+	uint16_t mesg = 0;
 	clilen = sizeof(struct sockaddr);
 	n = recvfrom(sockfd, reinterpret_cast<void *>(mesg), MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
 
