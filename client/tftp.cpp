@@ -40,54 +40,31 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 	 *
 	 *		send packet
 	 *		wait for ack
+	 *		check it is an ack
+	 *			if so, manage acks // for only one packet, the process has completed
+	 *			else, if its an error, resend packet
+	 *				else, more ACKs management needed
 	 *
 	 * */
-
-	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
-
-	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
-	char buffer[MAXMESG];
-	int blockNumber = 1; // temporary for testing
-
-	// Pack message(s) into data from file
-	// For right now, its only one packet for a 512 byte file
-	char *bufpoint; // for building packet
-	*(short *)buffer = htons(DATA);
-	bufpoint = buffer + 2; // move pointer to block number
-	strcpy(bufpoint, reinterpret_cast<const char *>(blockNumber)); // add file name to buffer
-	bufpoint = buffer + 4; //move pointer to index 5 to fill with data
-
-	// From: https://stackoverflow.com/questions/36658734/c-get-all-bytes-of-a-file-in-to-a-char-array/36658802
-	//open file
-	std::ifstream infile("ClientTest.text");
-	//read file
-	if (!(infile.read(bufpoint, sizeof(buffer)-4))) // read up to the size of the buffer
-	{
-		if (!infile.eof()) // end of file is an expected condition here and not worth
-			// clearing. What else are you going to read?
-		{
-			std::cout << "reached end of buffer with more data to read" << std:: endl;
-			// something went wrong while reading. Find out what and handle.
-		}
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////
-
-	int n, m, clilen;
-	// Send message(s)
-	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
-	if (m < 0) {
+	int m; // for debugging
+	m = SendMessageHelper(sockfd, receiving_addr, fileName);
+	if (m < 0) { // for debugging
 		printf(": sendto error\n");
 		exit(3);
 	}
 
-	// Receive Acknowledgement
-	char mesg[MAXMESG];
-	clilen = sizeof(struct sockaddr);
-	n = recvfrom(sockfd, mesg, MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
-	if (n < 0) {
-		printf(": recvfrom error\n");
-		exit(4);
+	// Hopefully, Receive Acknowledgement
+	char* mesg;
+	mesg = ReceiveAcknowledgementHelper(sockfd, sending_addr);
+	// break down the package to see if its an ACK or something else.
+	int receivedOPCode = std::stoi(std::string(1,mesg[0]) + mesg[1]);
+	if (receivedOPCode == ACK) {
+		std::string blockNumString = std::string(1,mesg[2]) + mesg[3];
+		std::cout << "Acknowledgement Received! Block Number: " << blockNumString << std::endl;
+	} else if (receivedOPCode == ERROR) {
+		std::cout << "Received ERROR!" << std::endl;
 	}
+
 	// Perform more header checks HERE
 	/*
 	if (some issue) {
@@ -97,7 +74,7 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 }
 
 // This function is called if the server receives a WRQ
-// or
+// or if the client sends an RRQ
 void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 
@@ -155,4 +132,57 @@ void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
 	*(short *)buffer = htons(blockNumber);
 	bufpoint = *buffer + 4;
 
+}
+
+int tftp::SendMessageHelper(int sockfd, sockaddr_in receiving_addr, char* fileName) {
+	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
+
+	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
+	char buffer[MAXMESG];
+	int blockNumber = 1; // temporary for testing
+
+	// Pack message(s) into data from file
+	// For right now, its only one packet for a 512 byte file
+	char *bufpoint; // for building packet
+	*(short *)buffer = htons(DATA);
+	bufpoint = buffer + 2; // move pointer to block number
+	strcpy(bufpoint, reinterpret_cast<const char *>(blockNumber)); // add file name to buffer
+	bufpoint = buffer + 4; //move pointer to index 5 to fill with data
+
+	// From: https://stackoverflow.com/questions/36658734/c-get-all-bytes-of-a-file-in-to-a-char-array/36658802
+	//open file
+	std::ifstream infile("ClientTest.text");
+	//read file
+	if (!(infile.read(bufpoint, sizeof(buffer)-4))) // read up to the size of the buffer
+	{
+		if (!infile.eof()) // end of file is an expected condition here and not worth
+			// clearing. What else are you going to read?
+		{
+			std::cout << "reached end of buffer with more data to read" << std:: endl;
+			// something went wrong while reading. Find out what and handle.
+		}
+	}
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
+	int m;
+	// Send message(s)
+	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+	return m;
+}
+
+// returns the content of the byteStream already interpreted as a char*
+char* tftp::ReceiveAcknowledgementHelper(int sockfd, sockaddr sending_addr) {
+	int n; // for debugging
+	int clilen;
+	uint16_t mesg;
+	clilen = sizeof(struct sockaddr);
+	n = recvfrom(sockfd, reinterpret_cast<void *>(mesg), MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
+
+	char buffPointer[MAXMESG];
+	*buffPointer = static_cast<char>(ntohs(mesg));
+	if (n < 0) { // for debugging
+		printf(": recvfrom error\n");
+		exit(4);
+	}
+	return buffPointer;
 }

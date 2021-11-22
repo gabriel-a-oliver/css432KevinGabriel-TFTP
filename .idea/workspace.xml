@@ -19,7 +19,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/depend.make" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +78,7 @@
       <workItem from="1637343719979" duration="1000" />
       <workItem from="1637350664123" duration="4706000" />
       <workItem from="1637604923608" duration="3767000" />
-      <workItem from="1637610619096" duration="5704000" />
+      <workItem from="1637610619096" duration="10656000" />
     </task>
     <servers />
   </component>
