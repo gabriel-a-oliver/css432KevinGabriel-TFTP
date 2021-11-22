@@ -26,7 +26,7 @@ class tftp {
 #define ERROR 5
 
 
-	static void SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr);
+	static void SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr, char* fileName);
 	static void ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr);
 	static void BuildAckMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildErrMessage(int blockNumber, char* buffer[MAXMESG]);
