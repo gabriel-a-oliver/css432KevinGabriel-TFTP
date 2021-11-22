@@ -12,6 +12,7 @@
 #include <signal.h>         // for the signal handler registration.
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 
 // to be moved to shared tftp file
 #define RRQ	1
@@ -31,6 +32,44 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 	char buffer[MAXMESG];
 
 	// Pack message(s) into data from file
+	// For right now, its only one packet for a 512 byte file
+	char *bufpoint; // for building packet
+	char buffer[MAXMESG]; // packet that will be sent
+	if (op[1] == 'r') {
+		*(short *)buffer = htons(RRQ);
+	}
+	if (op[1] == 'w') {
+		*(short *)buffer = htons(WRQ);
+	}
+	bufpoint = buffer + 2; // move pointer to file name
+	strcpy(bufpoint, filename); // add file name to buffer
+	bufpoint += strlen(filename) + 1; //move pointer and add null byte
+	strcpy(bufpoint, "octet"); // add mode to buffer
+	bufpoint += strlen("octet") + 1; // move pointer and add null byte
+
+	// From: https://stackoverflow.com/questions/36658734/c-get-all-bytes-of-a-file-in-to-a-char-array/36658802
+	//open file
+	std::ifstream infile("C:\\MyFile.csv");
+
+	//get length of file
+	infile.seekg(0, std::ios::end);
+	size_t length = infile.tellg();
+	infile.seekg(0, std::ios::beg);
+
+	// don't overflow the buffer!
+	if (length > sizeof (buffer))
+	{
+		length = sizeof (buffer);
+	}
+
+	//read file
+	infile.read(buffer, length);
+	///////////////////////////////////////////////////////////////
+
+
+
+
+
 
 	// Send message(s)
 	m = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
@@ -103,4 +142,14 @@ void tftp::BuildErrMessage(int blockNumber, char* buffer[MAXMESG]) {
 	*(short *)*buffer = htons(ERROR);
 	bufpoint = *buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
+}
+
+void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
+	char *bufpoint; // for building packet
+	//char buffer[MAXMESG]; // buffer with arbituary 512 size
+	*(short *)*buffer = htons(DATA);
+	bufpoint = *buffer + 2; // move pointer to file name
+	*(short *)buffer = htons(blockNumber);
+	bufpoint = *buffer + 4;
+
 }

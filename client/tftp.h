@@ -30,6 +30,7 @@ class tftp {
 	static void ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr);
 	static void BuildAckMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildErrMessage(int blockNumber, char* buffer[MAXMESG]);
+	static void BuildDataMessage(int blockNumber, char* buffer[MAXMESG]);
 
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H
