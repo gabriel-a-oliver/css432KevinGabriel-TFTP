@@ -97,12 +97,6 @@ void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receivi
 
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 
-
-
-
-
-
-
 	int n, m, clilen;
 	char* mesg;
 	clilen = sizeof(struct sockaddr);
@@ -117,20 +111,21 @@ void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receivi
 		std::cout << "DATA not received" << std::endl;
 	}
 
+	//// STILL NEEDS WORK ////////////////////////
 	// Perform more header checks HERE
 	/*
 	 if (some issue) {
 	 	buffer = BuildErrMessage(int blockNumber, reinterpret_cast<char **>(buffer))
 	 } else { build acknowledgement}
 	*/
+	// Unpack message for data //
 
-
-	//// STILL NEEDS WORK ////////////////////////
+	
 	// assuming it received a data packet
 	char* buffer[MAXMESG];
 	BuildAckMessage(/*Get Block Number*/1, reinterpret_cast<char **>(buffer));
 
-	// Unpack message for data //
+
 
 	// Send Acknowledgement
 	m = sendto(sockfd, *buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
