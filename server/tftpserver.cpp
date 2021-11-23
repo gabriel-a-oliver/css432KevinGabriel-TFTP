@@ -8,14 +8,7 @@
 #include <string.h>         // for strerror function.
 #include <signal.h>         // for the signal handler registration.
 #include <unistd.h>
-
-// to be moved to shared tftp file
-#define RRQ	1
-#define WRQ 2
-#define DATA 3
-#define ACK 4
-#define	ERROR 5
-#define MAXMESG 512
+#include "tftp.cpp"
 
 #define SERV_UDP_PORT   51709 // REPLACE WITH YOUR PORT NUMBER
 
@@ -62,14 +55,20 @@ int main(int argc, char *argv[]) {
 		}
 
         unsigned short op = buffer[1];
+        char *bufpoint = buffer + 2;
+        char *filename;
+        strcpy(filename, bufpoint);
+        
 
         if (op == RRQ) {
-            // if RRQ, call tftp shared sending function 
+            // if RRQ, call tftp shared sending function
+            tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
         }
         if (op == WRQ) {
             // if WRQ, send ACK0 and call tftp shared receiving function
             // BuildAckMessage()
             // sendto()
+            tftp::ReceiveMessage(sockfd, &pcli_addr, (struct sockaddr *) &serv_addr);
         }
     }
 
