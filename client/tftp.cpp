@@ -26,7 +26,7 @@
 
 // This function is called if the server gets an RRQ
 // or of the client sends an WRQ
-void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName) {
+void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, const char* fileName) {
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file to send
 	 *
@@ -158,7 +158,7 @@ void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
 	bufpoint = *buffer + 4;
 }
 
-int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName) {
+int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, const char* fileName) {
 	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
 
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
