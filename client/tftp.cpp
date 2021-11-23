@@ -26,7 +26,7 @@
 
 // This function is called if the server gets an RRQ
 // or of the client sends an WRQ
-void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr, char* fileName) {
+void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName) {
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file to send
 	 *
@@ -75,7 +75,7 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 
 // This function is called if the server receives a WRQ
 // or if the client sends an RRQ
-void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr receiving_addr) {
+void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr) {
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file want to receive
 	 *
@@ -158,7 +158,7 @@ void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
 	bufpoint = *buffer + 4;
 }
 
-int tftp::SendMessageHelper(int sockfd, sockaddr_in receiving_addr, char* fileName) {
+int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName) {
 	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
 
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
@@ -195,12 +195,12 @@ int tftp::SendMessageHelper(int sockfd, sockaddr_in receiving_addr, char* fileNa
 }
 
 // returns the content of the byteStream already interpreted as a char*
-char* tftp::ReceivePacketHelper(int sockfd, sockaddr sending_addr) {
+char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
 	int n; // for debugging
 	int clilen;
 	uint16_t mesg = 0;
 	clilen = sizeof(struct sockaddr);
-	n = recvfrom(sockfd, reinterpret_cast<void *>(mesg), MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
+	n = recvfrom(sockfd, reinterpret_cast<void *>(mesg), MAXMESG, 0, &*sending_addr, (socklen_t*)&clilen);
 	if (n < 0) { // for debugging
 		printf(": recvfrom error\n");
 		exit(4);
