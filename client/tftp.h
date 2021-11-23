@@ -26,14 +26,14 @@ class tftp {
 #define ERROR 5
 
 public:
-	static void SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, const char* fileName);
+	static void SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName);
 	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr);
 	static void BuildAckMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildErrMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildDataMessage(int blockNumber, char* buffer[MAXMESG]);
 
 private:
-	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, const char* fileName);
+	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
 	static char* ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr);
 
 };
