@@ -18,7 +18,6 @@
     <list default="true" id="8faf2e8b-d0f1-436e-ba2a-da8d4e414dbe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/Testing/Temporary/LastTest.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +78,7 @@
       <workItem from="1637350664123" duration="4706000" />
       <workItem from="1637604923608" duration="3767000" />
       <workItem from="1637610619096" duration="12382000" />
-      <workItem from="1637634052975" duration="424000" />
+      <workItem from="1637634052975" duration="2384000" />
     </task>
     <servers />
   </component>

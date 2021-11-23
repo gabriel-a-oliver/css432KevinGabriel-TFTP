@@ -75,7 +75,7 @@ void tftp::SendMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_
 
 // This function is called if the server receives a WRQ
 // or if the client sends an RRQ
-void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receiving_addr) {
+void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr receiving_addr) {
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file want to receive
 	 *
@@ -120,12 +120,10 @@ void tftp::ReceiveMessage(int sockfd, sockaddr sending_addr, sockaddr_in receivi
 	*/
 	// Unpack message for data //
 
-	
+
 	// assuming it received a data packet
 	char* buffer[MAXMESG];
 	BuildAckMessage(/*Get Block Number*/1, reinterpret_cast<char **>(buffer));
-
-
 
 	// Send Acknowledgement
 	m = sendto(sockfd, *buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
@@ -158,7 +156,6 @@ void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
 	bufpoint = *buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
 	bufpoint = *buffer + 4;
-
 }
 
 int tftp::SendMessageHelper(int sockfd, sockaddr_in receiving_addr, char* fileName) {
@@ -204,12 +201,12 @@ char* tftp::ReceivePacketHelper(int sockfd, sockaddr sending_addr) {
 	uint16_t mesg = 0;
 	clilen = sizeof(struct sockaddr);
 	n = recvfrom(sockfd, reinterpret_cast<void *>(mesg), MAXMESG, 0, &sending_addr, (socklen_t*)&clilen);
-
-	char buffPointer[MAXMESG];
-	*buffPointer = static_cast<char>(ntohs(mesg));
 	if (n < 0) { // for debugging
 		printf(": recvfrom error\n");
 		exit(4);
 	}
+	char buffPointer[MAXMESG];
+	*buffPointer = static_cast<char>(ntohs(mesg));
+
 	return buffPointer;
 }
