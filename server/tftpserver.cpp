@@ -15,6 +15,7 @@
 char *progname;
 
 int main(int argc, char *argv[]) {
+	std::cout << "in main" << std::endl;
 	if (argc != 1) {
 		printf("%s: invalid number of arguments\n",progname);
 		exit(1);
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr pcli_addr;
 
     for ( ; ; ) {
+	std::cout << "am in loop" << std::endl;
         clilen = sizeof(struct sockaddr);
 
         n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
