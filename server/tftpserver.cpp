@@ -68,15 +68,24 @@ int main(int argc, char *argv[]) {
 		} else {
 			std::cout << "no errors in recvfrom" << std::endl;
 		}
-	
-		std::cout<< "whole buffer: ";
-		for (int i = 0; i < MAXMESG; ++i) {
+
+		std::cout<< "whole buffer after being received:" << *buffer << *buffer + 1;
+		for (int i = 2; i < MAXMESG; ++i) {
 			std::cout<< buffer[i];
 		}
 		std::cout<<std::endl;
 
-        unsigned short op = buffer[1];
-		std::cout<< "op: " << op <<std::endl;
+		// checking what the op is
+		if ((*buffer << *buffer + 1) == RRQ) {
+			std::cout << "it is RRQ: " << (*buffer << *buffer + 1) << std::endl;
+		} else if ((*buffer << *buffer + 1) == WRQ) {
+			std::cout << "it is WRQ: " << (*buffer << *buffer + 1) << std::endl;
+		} else {
+			std::cout << "neigher RRQ or WRQ: " << (*buffer << *buffer + 1) << std::endl;
+		}
+
+        unsigned short int op = ntohs(*buffer << *buffer + 1); //unsigned short op = *buffer << *buffer + 1;
+		std::cout<< "op: " << std::to_string(op) <<std::endl;
         char *bufpoint = buffer + 2;
 		std::cout<< "bufpoint: " << *bufpoint <<std::endl;
         char *filename;

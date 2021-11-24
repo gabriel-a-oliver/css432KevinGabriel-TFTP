@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	}
 
     // testing just a char array
-    char temp[] = "testing";
+    char temp[MAXMESG] = "testing";
     sendto(sockfd, temp, strlen(temp), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 
     char *bufpoint; // for building packet
@@ -65,12 +65,14 @@ int main(int argc, char *argv[])
 
 	std::cout<< "seeing if OP is r or w" <<std::endl;
     if (op[1] == 'r') {
-		std::cout<< "OP is r" <<std::endl;
-        *(short *)buffer = htons(RRQ);
+		std::cout<< "OP is r: " << RRQ <<std::endl;
+        *buffer = htons(RRQ);
+		std::cout << "op after htons:" << *buffer << *buffer + 1 << std::endl;
+
     } else
     if (op[1] == 'w') {
 		std::cout<< "OP is w" <<std::endl;
-        *(short *)buffer = htons(WRQ);
+        *(short int *)buffer = htons(WRQ);
     } else {
 		std::cout<< "neither r or w" <<std::endl;
 	}
@@ -82,8 +84,8 @@ int main(int argc, char *argv[])
     strcpy(bufpoint, "octet"); // add mode to buffer
     bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
-	std::cout<< "whole buffer before being sent: ";
-	for (int i = 0; i < MAXMESG; ++i) {
+	std::cout<< "whole buffer before being sent:" << *buffer << *buffer + 1;
+	for (int i = 2; i < MAXMESG; ++i) {
 		std::cout<< buffer[i];
 	}
 	std::cout<<std::endl;
