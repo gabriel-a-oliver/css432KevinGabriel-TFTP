@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 	std::cout<<std::endl;
 
 	std::cout<< "sending packet" <<std::endl;
-    int n = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+    int n = sendto(sockfd, buffer, bufpoint-buffer, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
     if (n < 0) {
 		printf("%s: sendto error\n",progname);
 		exit(4);
