@@ -76,6 +76,12 @@ int main(int argc, char *argv[])
     strcpy(bufpoint, "octet"); // add mode to buffer
     bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
+	std::cout<< "whole buffer before being sent: ";
+	for (int i = 0; i < MAXMESG; ++i) {
+		std::cout<< buffer[i];
+	}
+	std::cout<<std::endl;
+
 	std::cout<< "sending packet" <<std::endl;
     int n = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
     if (n < 0) {

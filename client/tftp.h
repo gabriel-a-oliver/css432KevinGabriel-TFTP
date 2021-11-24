@@ -31,10 +31,10 @@ public:
 	static void BuildAckMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildErrMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildDataMessage(int blockNumber, char* buffer[MAXMESG]);
-
+	static char* ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr);
 private:
 	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
-	static char* ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr);
+
 
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H

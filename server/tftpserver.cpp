@@ -59,11 +59,28 @@ int main(int argc, char *argv[]) {
 			std::cout << "no errors in recvfrom" << std::endl;
 		}
 
+		//char tempMesg[MAXMESG] = nullptr;
+		for (int i = 0; i < MAXMESG; ++i) {
+			char currentValue = static_cast<char>(ntohs(buffer[i]));
+			std::cout<< "currentValue: " << currentValue <<std::endl;
+
+		}
+
+
+		std::cout<< "whole buffer: ";
+		for (int i = 0; i < MAXMESG; ++i) {
+			std::cout<< buffer[i];
+		}
+		std::cout<<std::endl;
+
         unsigned short op = buffer[1];
+		std::cout<< "op: " << op <<std::endl;
         char *bufpoint = buffer + 2;
+		std::cout<< "bufpoint: " << *bufpoint <<std::endl;
         char *filename;
         strcpy(filename, bufpoint);
-        
+		std::cout<< "filename: " << *filename <<std::endl;
+
 		std::cout << "checking if op is RRQ or WRQ" << std::endl;
         if (op == RRQ) {
 			std::cout<< "op is RRQ" <<std::endl;
