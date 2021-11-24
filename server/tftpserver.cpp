@@ -47,13 +47,16 @@ int main(int argc, char *argv[]) {
     struct sockaddr pcli_addr;
 
     for ( ; ; ) {
-	std::cout << "am in loop" << std::endl;
+		std::cout << "am in loop" << std::endl;
         clilen = sizeof(struct sockaddr);
 
         n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
+		std::cout << "received something" << std::endl;
 		if (n < 0) {
 			printf("%s: recvfrom error\n",progname);
 			exit(4);
+		} else {
+			std::cout << "no errors in recvfrom" << std::endl;
 		}
 
         unsigned short op = buffer[1];
@@ -61,17 +64,20 @@ int main(int argc, char *argv[]) {
         char *filename;
         strcpy(filename, bufpoint);
         
-
+		std::cout << "checking if op is RRQ or WRQ" << std::endl;
         if (op == RRQ) {
+			std::cout<< "op is RRQ" <<std::endl;
             // if RRQ, call tftp shared sending function
             tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
         }
         if (op == WRQ) {
+			std::cout<< "op is WRQ"<<std::endl;
             // if WRQ, send ACK0 and call tftp shared receiving function
             // BuildAckMessage()
             // sendto()
             tftp::ReceiveMessage(sockfd, &pcli_addr, (struct sockaddr *) &serv_addr);
         }
+		std::cout<< "op was neither"<<std::endl;
     }
 
     return 0;

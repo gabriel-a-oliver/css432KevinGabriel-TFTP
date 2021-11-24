@@ -22,10 +22,11 @@ int main(int argc, char *argv[])
 		printf("%s: invalid number of arguments\n",progname);
 		exit(1);
     }
+	std::cout<< "correct number of command line arguments"<<std::endl;
     progname = argv[0];
     const char *op = argv[1];
     char *filename = argv[2];
-    
+    std::cout<< "assigned command line arguments to variables"<<std::endl;
     int sockfd;
 	
 	struct sockaddr_in cli_addr, serv_addr;
@@ -38,6 +39,8 @@ int main(int argc, char *argv[])
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		printf("%s: can't open datagram socket\n",progname);
 		exit(2);
+	} else {
+		std::cout<< "socket established"<<std::endl;
 	}
 
 	bzero((char *) &cli_addr, sizeof(cli_addr));
@@ -48,32 +51,51 @@ int main(int argc, char *argv[])
 	if (bind(sockfd, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
 		 printf("%s: can't bind local address\n",progname);
 		 exit(3);
+	} else {
+		std::cout<< "socket bound correctly" <<std::endl;
 	}
 
     char *bufpoint; // for building packet
     char buffer[MAXMESG]; // packet that will be sent
+	std::cout<< "seeing if OP is r or w" <<std::endl;
     if (op[1] == 'r') {
+		std::cout<< "OP is r" <<std::endl;
         *(short *)buffer = htons(RRQ);
-    }
+    } else
     if (op[1] == 'w') {
+		std::cout<< "OP is w" <<std::endl;
         *(short *)buffer = htons(WRQ);
-    }
+    } else {
+		std::cout<< "neither r or w" <<std::endl;
+	}
+
+	std::cout<< "creating packet" <<std::endl;
     bufpoint = buffer + 2; // move pointer to file name
     strcpy(bufpoint, filename); // add file name to buffer
     bufpoint += strlen(filename) + 1; //move pointer and add null byte
     strcpy(bufpoint, "octet"); // add mode to buffer
     bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
+	std::cout<< "sending packet" <<std::endl;
     int n = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
     if (n < 0) {
 		printf("%s: sendto error\n",progname);
 		exit(4);
+	} else {
+		std::cout<< "no issue sending packet" <<std::endl;
 	}
 
-    // if RRQ, call tftp shared receiving function
-    tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr);
-    // if WRQ, call tftp shared sending function (may need to receive ACK0 first)
-    tftp::SendMessage(sockfd, (struct sockaddr *) &cli_addr, (struct sockaddr *) &serv_addr, filename);
+	if (op[1] == 'r') {
+		// if RRQ, call tftp shared receiving function
+		tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr);
+	} else if (op[1] == 'w') {
+		// if WRQ, call tftp shared sending function (may need to receive ACK0 first)
+		tftp::SendMessage(sockfd, (struct sockaddr *) &cli_addr, (struct sockaddr *) &serv_addr, filename);
+	} else {
+		std::cout<< "was not RRQ or WRQ" <<std::endl;
+	}
+
+
 
     
 	close(sockfd);
