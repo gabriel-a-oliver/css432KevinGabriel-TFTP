@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     strcpy(bufpoint, "octet"); // add mode to buffer
     bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
-	
+
 	std::cout<< "whole buffer before being sent: ";
 	for (int i = 0; i < MAXMESG; ++i) {
 		std::cout<< buffer[i];

@@ -9,6 +9,7 @@
 #include <signal.h>         // for the signal handler registration.
 #include <unistd.h>
 #include "tftp.cpp"
+#include <cstdio>
 
 #define SERV_UDP_PORT   51709 // REPLACE WITH YOUR PORT NUMBER
 
@@ -58,7 +59,10 @@ int main(int argc, char *argv[]) {
 		} else {
 			std::cout << "no errors in recvfrom" << std::endl;
 		}
-
+		std::cout<< "performing fputs"<<std::endl;
+		buffer[n] = 0;
+		fputs(buffer, stdout);
+		std::cout<< "end of fputs"<<std::endl;
 		//char tempMesg[MAXMESG] = nullptr;
 		/*for (int i = 0; i < MAXMESG; ++i) {
 			char currentValue = static_cast<char>(ntohs(buffer[i]));
