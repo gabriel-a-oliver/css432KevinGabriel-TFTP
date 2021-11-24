@@ -12,7 +12,7 @@
 
 
 #define SERV_UDP_PORT 51709 //REPLACE WITH YOUR PORT NUMBER
-#define SERV_HOST_ADDR "10.158.82.41" //REPLACE WITH SERVER IP ADDRESS
+#define SERV_HOST_ADDR "10.158.82.38" //REPLACE WITH SERVER IP ADDRESS
 
 char *progname;
 
@@ -54,6 +54,15 @@ int main(int argc, char *argv[])
 	} else {
 		std::cout<< "socket bound correctly" <<std::endl;
 	}
+
+
+    //
+    // testing just a char array
+    //
+    char temp[] = "testing";
+    sendto(sockfd, temp, strlen(temp), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+
+
 
     char *bufpoint; // for building packet
     char buffer[MAXMESG]; // packet that will be sent

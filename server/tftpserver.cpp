@@ -45,11 +45,18 @@ int main(int argc, char *argv[]) {
 
 	int n, clilen;
     char buffer[MAXMESG];
+    bzero(buffer, sizeof(buffer));
     struct sockaddr pcli_addr;
 
     for ( ; ; ) {
 		std::cout << "am in loop" << std::endl;
         clilen = sizeof(struct sockaddr);
+
+        recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
+        for (int i = 0; i < MAXMESG; i++) {
+            std::cout<<buffer[i];
+        }
+        std::cout<<std::endl;
 
         n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
 		std::cout << "received something" << std::endl;
