@@ -60,11 +60,11 @@ int main(int argc, char *argv[]) {
 		}
 
 		//char tempMesg[MAXMESG] = nullptr;
-		for (int i = 0; i < MAXMESG; ++i) {
+		/*for (int i = 0; i < MAXMESG; ++i) {
 			char currentValue = static_cast<char>(ntohs(buffer[i]));
 			std::cout<< "currentValue: " << currentValue <<std::endl;
 
-		}
+		}*/
 
 
 		std::cout<< "whole buffer: ";

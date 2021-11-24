@@ -57,6 +57,11 @@ int main(int argc, char *argv[])
 
     char *bufpoint; // for building packet
     char buffer[MAXMESG]; // packet that will be sent
+	// Fill the whole buffer with nulls before using
+	for (int i = 0; i < MAXMESG; ++i) {
+		buffer[i] = NULL;
+	}
+	//memset(static_cast<void*>(buffer), 0, sizeof MAXMESG);
 	std::cout<< "seeing if OP is r or w" <<std::endl;
     if (op[1] == 'r') {
 		std::cout<< "OP is r" <<std::endl;
@@ -76,6 +81,7 @@ int main(int argc, char *argv[])
     strcpy(bufpoint, "octet"); // add mode to buffer
     bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
+	
 	std::cout<< "whole buffer before being sent: ";
 	for (int i = 0; i < MAXMESG; ++i) {
 		std::cout<< buffer[i];
