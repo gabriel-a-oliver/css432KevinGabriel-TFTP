@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
         char *bufpoint = buffer + 2;
 		std::cout<< "bufpoint: " << *bufpoint <<std::endl;
 
-		int fileNameLength = -1;
+		int fileNameLength = 0;
 		std::cout<< "checking for file name length"<<std::endl;
 		for (int i = 2; i < MAXMESG; i++) {
 			if (buffer[i] != NULL) {
