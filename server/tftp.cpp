@@ -22,6 +22,7 @@
 #define ACK 4
 #define	ERROR 5
 #define MAXMESG 516
+#define MAXDATA 512
 
 #include "tftp.h"
 

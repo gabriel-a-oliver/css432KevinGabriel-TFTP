@@ -47,6 +47,43 @@ int main(int argc, char *argv[]) {
     bzero(buffer, sizeof(buffer));
     struct sockaddr pcli_addr;
 
+
+	char* CreateDataPacket(char* filename) {
+
+		char buffer[MAXMESG];
+		bzero(buffer, sizeof(buffer));
+		char* bufpoint = nullptr;
+
+		std::cout<< "OP: " << DATA <<std::endl;
+		unsigned short htonsNum = 3;
+		*buffer = htons(htonsNum);
+		std::cout<< "creating data packet" <<std::endl;
+		bufpoint = buffer + 2; // move pointer to file name
+
+		//FileData//////////////////////////////////////////////////////////////////
+		//open and reading Linux commands:
+		int fd = open(filename, O_RDONLY); // open text file
+		std::cout<< "fd value:" << fd <<std::endl;
+		if (fd < 0) {
+			std::cout<< "linux open file error"<<std::endl;
+			// error opening fileName
+		} else {
+			std::cout<< "no issue opening file"<<std::endl;
+		}
+
+		char data[MAXDATA];
+		bzero(data, sizeof(data));
+		int result = read(fd, data, MAXDATA); // read up to MAXDATA bytes
+		// if result == 0: end of file; if result > 0: error
+
+		// create DATA packet and call sendto
+
+		close(fd); // once finish reading whole file, close text file
+		///////////////////////////////////////////////////////////////////////////
+
+		return buffer;
+	}
+
     for ( ; ; ) {
 		std::cout << "am in loop" << std::endl;
         clilen = sizeof(struct sockaddr);
@@ -97,8 +134,12 @@ int main(int argc, char *argv[]) {
         if (opNumber == RRQ) {
 			std::cout<< "op is RRQ" <<std::endl;
             // if RRQ, call tftp shared sending function
-            tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
-        } else
+            //tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
+			char fileBuffer[MAXMESG];
+			bzero(fileBuffer, sizeof(fileBuffer));
+
+			fileBuffer = CreateDataPacket(filename)
+		} else
         if (opNumber == WRQ) {
 			std::cout<< "op is WRQ"<<std::endl;
             // if WRQ, send ACK0 and call tftp shared receiving function
@@ -111,6 +152,8 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
 
 
 
