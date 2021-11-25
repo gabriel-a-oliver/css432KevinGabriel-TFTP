@@ -46,6 +46,9 @@ void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockadd
 	 *				else, more ACKs management needed
 	 *
 	 * */
+    
+    std::cout<< "inside SendMessage function"<<std::endl;
+    
 	int m; // for debugging
 	m = SendMessageHelper(sockfd, receiving_addr, fileName);
 	if (m < 0) { // for debugging
@@ -163,7 +166,9 @@ void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
 }
 
 int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName) {
-	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
+	std::cout<< "inside SendMessageHelper function"<<std::endl;
+    
+    fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
 
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 	char buffer[MAXMESG];

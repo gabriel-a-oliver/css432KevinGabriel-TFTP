@@ -51,16 +51,6 @@ int main(int argc, char *argv[]) {
 		std::cout << "am in loop" << std::endl;
         clilen = sizeof(struct sockaddr);
 
-        /*// receive testing char array
-        recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
-        std::cout<< "testing char array: ";
-        for (int i = 0; i < MAXMESG; i++) {
-            std::cout<<buffer[i];
-        }
-        std::cout<<std::endl;*/
-
-        bzero(buffer, sizeof(buffer));
-
         n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
 		std::cout << "received something" << std::endl;
 		if (n < 0) {
@@ -97,7 +87,11 @@ int main(int argc, char *argv[]) {
 		std::cout<< "fileNameLength:" << fileNameLength<<std::endl;
 		bcopy(bufpoint, filename, fileNameLength);
         //strcpy(filename, bufpoint);
-		std::cout<< "filename: " << *filename <<std::endl;
+		std::cout<< "filename: ";
+        for (int i = 0; i < fileNameLength; i++) {
+            std::cout << filename[i];
+        }
+        std::cout << std::endl;
 
 		std::cout << "checking if op is RRQ or WRQ" << std::endl;
         if (opNumber == RRQ) {

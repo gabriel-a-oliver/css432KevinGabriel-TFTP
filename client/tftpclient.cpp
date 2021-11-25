@@ -54,12 +54,6 @@ int main(int argc, char *argv[])
 		exit(3);
 	}
 
-/*
-	// testing just a char array
-	char temp[MAXMESG] = "testing";
-	sendto(sockfd, temp, strlen(temp), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-*/
-
 	char *bufpoint; // for building packet
 	char buffer[MAXMESG]; // packet that will be sent
 	bzero(buffer, sizeof(buffer));
