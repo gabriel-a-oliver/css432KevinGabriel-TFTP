@@ -51,13 +51,14 @@ int main(int argc, char *argv[]) {
 		std::cout << "am in loop" << std::endl;
         clilen = sizeof(struct sockaddr);
 
-        // receive testing char array
+        /*// receive testing char array
         recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
         std::cout<< "testing char array: ";
         for (int i = 0; i < MAXMESG; i++) {
             std::cout<<buffer[i];
         }
-        std::cout<<std::endl;
+        std::cout<<std::endl;*/
+
         bzero(buffer, sizeof(buffer));
 
         n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
@@ -65,8 +66,6 @@ int main(int argc, char *argv[]) {
 		if (n < 0) {
 			printf("%s: recvfrom error\n",progname);
 			exit(4);
-		} else {
-			std::cout << "no errors in recvfrom" << std::endl;
 		}
 
 		std::cout<< "whole buffer after being received:" << *buffer << *buffer + 1;
@@ -75,30 +74,38 @@ int main(int argc, char *argv[]) {
 		}
 		std::cout<<std::endl;
 
-		// checking what the op is
-		if ((*buffer << *buffer + 1) == RRQ) {
-			std::cout << "it is RRQ: " << (*buffer << *buffer + 1) << std::endl;
-		} else if ((*buffer << *buffer + 1) == WRQ) {
-			std::cout << "it is WRQ: " << (*buffer << *buffer + 1) << std::endl;
-		} else {
-			std::cout << "neigher RRQ or WRQ: " << (*buffer << *buffer + 1) << std::endl;
-		}
+		std::cout<< "testing converting back with ntohs:";
+		unsigned short testNumShort = (*buffer + 1 << *buffer);
+		int opNumber = (int)testNumShort;
+		std::cout<< opNumber<<std::endl;
 
-        unsigned short int op = ntohs(*buffer << *buffer + 1); //unsigned short op = *buffer << *buffer + 1;
-		std::cout<< "op: " << std::to_string(op) <<std::endl;
+		std::cout<< "op: " << std::to_string(opNumber) <<std::endl;
         char *bufpoint = buffer + 2;
 		std::cout<< "bufpoint: " << *bufpoint <<std::endl;
-        char *filename;
-        strcpy(filename, bufpoint);
+
+		int fileNameLength = -1;
+		std::cout<< "checking for file name length"<<std::endl;
+		for (int i = 2; i < MAXMESG; i++) {
+			if (buffer[i] != NULL) {
+				fileNameLength++;
+			}
+			else {
+				break;
+			}
+		}
+		char filename[fileNameLength];
+		std::cout<< "fileNameLength:" << fileNameLength<<std::endl;
+		bcopy(bufpoint, filename, fileNameLength);
+        //strcpy(filename, bufpoint);
 		std::cout<< "filename: " << *filename <<std::endl;
 
 		std::cout << "checking if op is RRQ or WRQ" << std::endl;
-        if (op == RRQ) {
+        if (opNumber == RRQ) {
 			std::cout<< "op is RRQ" <<std::endl;
             // if RRQ, call tftp shared sending function
             tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
-        }
-        if (op == WRQ) {
+        } else
+        if (opNumber == WRQ) {
 			std::cout<< "op is WRQ"<<std::endl;
             // if WRQ, send ACK0 and call tftp shared receiving function
             // BuildAckMessage()

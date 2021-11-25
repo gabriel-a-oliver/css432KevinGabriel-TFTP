@@ -8,11 +8,12 @@
 #include <string.h>         // for strerror function.
 #include <signal.h>         // for the signal handler registration.
 #include <unistd.h>
+#include <typeinfo>
 #include "tftp.cpp"
 
 
 #define SERV_UDP_PORT 51709 //REPLACE WITH YOUR PORT NUMBER
-#define SERV_HOST_ADDR "10.158.82.38" //REPLACE WITH SERVER IP ADDRESS // lab11: 10.158.82.41
+#define SERV_HOST_ADDR "10.158.82.41" //REPLACE WITH SERVER IP ADDRESS // lab11: 10.158.82.41
 
 char *progname;
 
@@ -21,14 +22,14 @@ int main(int argc, char *argv[])
 	if (argc != 3) {
 		printf("%s: invalid number of arguments\n",progname);
 		exit(1);
-    }
+	}
 	std::cout<< "correct number of command line arguments"<<std::endl;
-    progname = argv[0];
-    const char *op = argv[1];
-    char *filename = argv[2];
-    std::cout<< "assigned command line arguments to variables"<<std::endl;
-    int sockfd;
-	
+	progname = argv[0];
+	const char *op = argv[1];
+	char *filename = argv[2];
+	std::cout<< "assigned command line arguments to variables"<<std::endl;
+	int sockfd;
+
 	struct sockaddr_in cli_addr, serv_addr;
 
 	bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -49,50 +50,53 @@ int main(int argc, char *argv[])
 	cli_addr.sin_port = htons(0);
 
 	if (bind(sockfd, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
-		 printf("%s: can't bind local address\n",progname);
-		 exit(3);
-	} else {
-		std::cout<< "socket bound correctly" <<std::endl;
+		printf("%s: can't bind local address\n",progname);
+		exit(3);
 	}
 
-    // testing just a char array
-    char temp[MAXMESG] = "testing";
-    sendto(sockfd, temp, strlen(temp), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+/*
+	// testing just a char array
+	char temp[MAXMESG] = "testing";
+	sendto(sockfd, temp, strlen(temp), 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+*/
 
-    char *bufpoint; // for building packet
-    char buffer[MAXMESG]; // packet that will be sent
-    bzero(buffer, sizeof(buffer));
+	char *bufpoint; // for building packet
+	char buffer[MAXMESG]; // packet that will be sent
+	bzero(buffer, sizeof(buffer));
 
 	std::cout<< "seeing if OP is r or w" <<std::endl;
-    if (op[1] == 'r') {
+	if (op[1] == 'r') {
 		std::cout<< "OP is r: " << RRQ <<std::endl;
-        *buffer = htons(RRQ);
-		std::cout << "op after htons:" << *buffer << *buffer + 1 << std::endl;
-
-    } else
-    if (op[1] == 'w') {
+		unsigned short htonsNum = 1;
+		*buffer = htons(htonsNum);
+	} else
+	if (op[1] == 'w') {
 		std::cout<< "OP is w" <<std::endl;
-        *(short int *)buffer = htons(WRQ);
-    } else {
+		*(short int *)buffer = htons(WRQ);
+	} else {
 		std::cout<< "neither r or w" <<std::endl;
 	}
 
 	std::cout<< "creating packet" <<std::endl;
-    bufpoint = buffer + 2; // move pointer to file name
-    strcpy(bufpoint, filename); // add file name to buffer
-    bufpoint += strlen(filename) + 1; //move pointer and add null byte
-    strcpy(bufpoint, "octet"); // add mode to buffer
-    bufpoint += strlen("octet") + 1; // move pointer and add null byte
+	bufpoint = buffer + 2; // move pointer to file name
+	strcpy(bufpoint, filename); // add file name to buffer
+	bufpoint += strlen(filename) + 1; //move pointer and add null byte
+	strcpy(bufpoint, "octet"); // add mode to buffer
+	bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
 	std::cout<< "whole buffer before being sent:" << *buffer << *buffer + 1;
 	for (int i = 2; i < MAXMESG; ++i) {
+		if (buffer[i] == NULL)
+		{
+			std::cout<< " ";
+		}
 		std::cout<< buffer[i];
 	}
 	std::cout<<std::endl;
 
 	std::cout<< "sending packet" <<std::endl;
-    int n = sendto(sockfd, buffer, bufpoint-buffer, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-    if (n < 0) {
+	int n = sendto(sockfd, buffer, bufpoint-buffer, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+	if (n < 0) {
 		printf("%s: sendto error\n",progname);
 		exit(4);
 	} else {
@@ -111,7 +115,7 @@ int main(int argc, char *argv[])
 
 
 
-    
+
 	close(sockfd);
 
 	return 0;
