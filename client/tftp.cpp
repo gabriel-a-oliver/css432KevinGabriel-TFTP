@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <fcntl.h>
 
 // to be moved to shared tftp file
 #define RRQ	1
@@ -27,6 +28,7 @@
 // This function is called if the server gets an RRQ
 // or of the client sends an WRQ
 void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName) {
+	std::cout<< "in tftp::SendMessage"<<std::endl;
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file to send
 	 *
@@ -46,6 +48,11 @@ void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockadd
 	 *				else, more ACKs management needed
 	 *
 	 * */
+
+
+
+
+
 	int m; // for debugging
 	m = SendMessageHelper(sockfd, receiving_addr, fileName);
 	if (m < 0) { // for debugging
@@ -76,6 +83,7 @@ void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockadd
 // This function is called if the server receives a WRQ
 // or if the client sends an RRQ
 void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr) {
+	std::cout<< "tftp::ReceiveMessage()"<<std::endl;
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file want to receive
 	 *
@@ -163,7 +171,9 @@ void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
 }
 
 int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName) {
-	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
+	std::cout<< "tftp::SendMessageHelper()"<<std::endl;
+    
+    fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
 
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 	char buffer[MAXMESG];
@@ -172,10 +182,24 @@ int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* f
 	// Pack message(s) into data from file
 	// For right now, its only one packet for a 512 byte file
 	char *bufpoint; // for building packet
-	*(short *)buffer = htons(DATA);
+
+	// setting OP code for DATA
+	unsigned short htonsNum = 3;
+	*buffer = htons(htonsNum);
+
+	//*(short *)buffer = htons(DATA);
 	bufpoint = buffer + 2; // move pointer to block number
-	strcpy(bufpoint, reinterpret_cast<const char *>(blockNumber)); // add file name to buffer
+	// setting blockNumber for packet
+	htonsNum = (unsigned short)blockNumber;
+	*buffer = htons(htonsNum);
+
+	//strcpy(bufpoint, reinterpret_cast<const char *>(blockNumber)); // add file name to buffer
 	bufpoint = buffer + 4; //move pointer to index 5 to fill with data
+
+
+
+
+
 
 	// From: https://stackoverflow.com/questions/36658734/c-get-all-bytes-of-a-file-in-to-a-char-array/36658802
 	//open file
@@ -200,17 +224,72 @@ int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* f
 
 // returns the content of the byteStream already interpreted as a char*
 char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
+	std::cout<< "in tftp::ReceivePacketHelper()"<<std::endl;
 	int n; // for debugging
 	int clilen;
-	uint16_t mesg = 0;
+	char mesg[MAXMESG];
 	clilen = sizeof(struct sockaddr);
-	n = recvfrom(sockfd, reinterpret_cast<void *>(mesg), MAXMESG, 0, &*sending_addr, (socklen_t*)&clilen);
+	n = recvfrom(sockfd, mesg, MAXMESG, 0, &*sending_addr, (socklen_t*)&clilen);
 	if (n < 0) { // for debugging
 		printf(": recvfrom error\n");
 		exit(4);
+	} else {
+		std::cout<< "no issue receiving"<<std::endl;
 	}
-	char buffPointer[MAXMESG];
-	*buffPointer = static_cast<char>(ntohs(mesg));
 
-	return buffPointer;
+	std::cout<< "whole buffer after being received:" << *mesg << *mesg + 1;
+	for (int i = 2; i < MAXMESG; ++i) {
+		std::cout<< mesg[i];
+	}
+	std::cout<<std::endl;
+
+	std::cout<< "testing converting back with ntohs:";
+	unsigned short testNumShort = (*mesg + 1 << *mesg);
+	int opNumber = (int)testNumShort;
+	std::cout<< opNumber<<std::endl;
+
+	switch (opNumber) {
+		case RRQ:
+			mesg[0] = '1';
+		case WRQ:
+			mesg[0] = '2';
+		case DATA:
+			mesg[0] = '3';
+		case ACK:
+			mesg[0] = '4';
+		case ERROR:
+			mesg[0] = '5';
+		default:
+			std::cout<< "opNumber error:"<< opNumber <<std::endl;
+	}
+
+	//char buffPointer[MAXMESG];
+	//*buffPointer = static_cast<char>(ntohs(mesg));
+
+	return mesg;
+}
+
+char** tftp::GetFileData(char* fileName) {
+
+	//open and reading Linux commands:
+	#define MAXDATA 512
+
+	int fd = open(fileName, O_RDONLY); // open text file
+	std::cout<< "fd value:" << fd <<std::endl;
+	if (fd < 0) {
+		std::cout<< "linux open file error"<<std::endl;
+		// error opening fileName
+	} else {
+		std::cout<< "no issue opening file"<<std::endl;
+	}
+
+	char data[MAXDATA];
+	bzero(data, sizeof(data));
+	int result = read(fd, data, MAXDATA); // read up to MAXDATA bytes
+	// if result == 0: end of file; if result > 0: error
+
+	// create DATA packet and call sendto
+
+	close(fd); // once finish reading whole file, close text file
+	return nullptr;
 }

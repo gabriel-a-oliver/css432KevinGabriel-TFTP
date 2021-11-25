@@ -35,6 +35,6 @@ public:
 private:
 	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
 	static char* ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr);
-
+	static char** GetFileData(char* fileName);
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H

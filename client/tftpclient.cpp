@@ -66,7 +66,8 @@ int main(int argc, char *argv[])
 	} else
 	if (op[1] == 'w') {
 		std::cout<< "OP is w" <<std::endl;
-		*(short int *)buffer = htons(WRQ);
+		unsigned short htonsNum = 2;
+		*buffer = htons(htonsNum);
 	} else {
 		std::cout<< "neither r or w" <<std::endl;
 	}
