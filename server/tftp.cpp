@@ -46,6 +46,27 @@ void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockadd
 	 *				else, more ACKs management needed
 	 *
 	 * */
+
+    /*
+        open and reading Linux commands:
+        #include <fcntl.h>
+        #define MAXDATA 512
+
+        int fd = open(fileName, O_RDONLY); // open text file
+        if (fd > 0) {
+            // error opening fileName
+        }
+
+        char data[MAXDATA];
+        bzero(data, sizeof(data));
+        int result = read(fd, data, MAXDATA); // read up to MAXDATA bytes
+        // if result == 0: end of file; if result > 0: error
+
+        // create DATA packet and call sendto
+
+        close(fd); // once finish reading whole file, close text file
+    */
+    
     
     std::cout<< "inside SendMessage function"<<std::endl;
     
