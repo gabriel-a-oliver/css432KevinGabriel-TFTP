@@ -117,22 +117,20 @@ int main(int argc, char *argv[]) {
 			exit(4);
 		}
 
-		std::cout<< "whole buffer after being received:" << *buffer << *(buffer + 1);
-		for (int i = 2; i < MAXMESG; ++i) {
+        // print out received buffer
+		std::cout<< "whole buffer after being received:";
+		printf("%x,%x", buffer[0], buffer[1]);
+        for (int i = 2; i < MAXMESG; ++i) {
 			std::cout<< buffer[i];
 		}
 		std::cout<<std::endl;
 
-        /*
-		std::cout<< "testing converting back with ntohs:";
-		unsigned short testNumShort = (*(buffer + 1) << *buffer);
-		int opNumber = (int)testNumShort;
-		std::cout<< opNumber<<std::endl;
-		std::cout<< "op: " << std::to_string(opNumber) <<std::endl;
-        */
 
-        unsigned short opNumber = ntohs(buffer[1]);
-        std::cout<< "op: " << opNumber <<std::endl;
+		unsigned short* bufferPointer = nullptr;
+		bufferPointer = reinterpret_cast<unsigned short *>(buffer);
+		unsigned short opNumber = ntohs(*bufferPointer);
+        std::cout << "converted ntohs op: " << opNumber << std::endl;
+        
 
         char *bufpoint = buffer + 2;
 		std::cout<< "bufpoint: " << *bufpoint <<std::endl;
