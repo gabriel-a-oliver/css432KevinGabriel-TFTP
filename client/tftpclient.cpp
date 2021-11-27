@@ -61,8 +61,17 @@ int main(int argc, char *argv[])
 	std::cout<< "seeing if OP is r or w" <<std::endl;
 	if (op[1] == 'r') {
 		std::cout<< "OP is r: " << RRQ <<std::endl;
-		*(short *) buffer = htons(RRQ);
-        std::cout<< "OP code is:" << ntohs(htons(RRQ)) <<std::endl;
+		//*(short *) buffer = htons(RRQ);
+
+		unsigned short htonsValue = 1;
+		unsigned short* bufferPointer = nullptr;
+		bufferPointer = reinterpret_cast<unsigned short *>(buffer);
+		*bufferPointer = htons(htonsValue);
+
+		bufferPointer += 1;
+		// print out each byte using a for loop. using hex format, or using character
+
+        //std::cout<< "OP code is:" << ntohs(htons(RRQ)) <<std::endl;
 	} else
 	if (op[1] == 'w') {
 		std::cout<< "OP is w:" << WRQ <<std::endl;
