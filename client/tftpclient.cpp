@@ -63,12 +63,11 @@ int main(int argc, char *argv[])
 		std::cout<< "OP is r: " << RRQ <<std::endl;
 		//*(short *) buffer = htons(RRQ);
 
-		unsigned short htonsValue = 1;
-		unsigned short* bufferPointer = nullptr;
-		bufferPointer = reinterpret_cast<unsigned short *>(buffer);
-		*bufferPointer = htons(htonsValue);
+		unsigned short RRQ = 1;
+		unsigned short* opCodePtr = (unsigned short *) buffer;
+		*opCodePtr = htons(RRQ);
 
-		bufferPointer += 1;
+		//bufferPointer += 1;  // not needed since you're using bufpoint below to point to filename
 		// print out each byte using a for loop. using hex format, or using character
 
         //std::cout<< "OP code is:" << ntohs(htons(RRQ)) <<std::endl;
@@ -89,7 +88,9 @@ int main(int argc, char *argv[])
 
 	std::cout<< "whole buffer before being sent:";
     unsigned short opNumber = ntohs(buffer[1]);
-    std::cout<< opNumber;
+    std::cout<< opNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+	printf("%x,%x", buffer[0], buffer[1]);
 	for (int i = 2; i < MAXMESG; ++i) {
 		if (buffer[i] == NULL)
 		{
