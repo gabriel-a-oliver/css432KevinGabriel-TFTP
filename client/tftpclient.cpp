@@ -12,7 +12,7 @@
 #include "tftp.cpp"
 
 
-#define SERV_UDP_PORT 51709 //REPLACE WITH YOUR PORT NUMBER
+#define SERV_UDP_PORT 51709
 #define SERV_HOST_ADDR "10.158.82.41" //REPLACE WITH SERVER IP ADDRESS // lab11: 10.158.82.41
 
 char *progname;
@@ -61,13 +61,12 @@ int main(int argc, char *argv[])
 	std::cout<< "seeing if OP is r or w" <<std::endl;
 	if (op[1] == 'r') {
 		std::cout<< "OP is r: " << RRQ <<std::endl;
-		unsigned short htonsNum = 1;
-		*buffer = htons(htonsNum);
+		*(short *) buffer = htons(RRQ);
+        std::cout<< "OP code is:" << ntohs(htons(RRQ)) <<std::endl;
 	} else
 	if (op[1] == 'w') {
-		std::cout<< "OP is w" <<std::endl;
-		unsigned short htonsNum = 2;
-		*buffer = htons(htonsNum);
+		std::cout<< "OP is w:" << WRQ <<std::endl;
+		*(short *)buffer = htons(WRQ);
 	} else {
 		std::cout<< "neither r or w" <<std::endl;
 	}
@@ -79,7 +78,9 @@ int main(int argc, char *argv[])
 	strcpy(bufpoint, "octet"); // add mode to buffer
 	bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
-	std::cout<< "whole buffer before being sent:" << *buffer << *(buffer + 1);
+	std::cout<< "whole buffer before being sent:";
+    unsigned short opNumber = ntohs(buffer[1]);
+    std::cout<< opNumber;
 	for (int i = 2; i < MAXMESG; ++i) {
 		if (buffer[i] == NULL)
 		{
