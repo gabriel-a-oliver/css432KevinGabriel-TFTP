@@ -121,6 +121,10 @@ int main(int argc, char *argv[]) {
 		std::cout<< "whole buffer after being received:";
 		printf("%x,%x", buffer[0], buffer[1]);
         for (int i = 2; i < MAXMESG; ++i) {
+			if (buffer[i] == NULL)
+			{
+				std::cout<< " ";
+			}
 			std::cout<< buffer[i];
 		}
 		std::cout<<std::endl;
