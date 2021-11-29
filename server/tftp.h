@@ -34,7 +34,8 @@ public:
 
 private:
 	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
-	static char* ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr);
+	static void ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr, char mesg[MAXMESG]);
 	static char** GetFileData(char* fileName);
+	void WriteToFile(char *fileName, char *dataBuffer);
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H

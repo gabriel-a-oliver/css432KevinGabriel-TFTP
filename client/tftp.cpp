@@ -62,8 +62,8 @@ void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockadd
 	}
 
 	// Hopefully, Receive Acknowledgement
-	char* mesg;
-	mesg = ReceivePacketHelper(sockfd, sending_addr);
+	char mesg[MAXMESG];
+	ReceivePacketHelper(sockfd, sending_addr, mesg);
 	// break down the package to see if its an ACK or something else.
 	int receivedOPCode = std::stoi(std::string(1,mesg[0]) + mesg[1]);
 	if (receivedOPCode == ACK) {
@@ -107,21 +107,31 @@ void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sock
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 
 	int n, m, clilen;
-	char* mesg;
+	char mesg[MAXMESG];
+	bzero(mesg, (MAXMESG));
 	clilen = sizeof(struct sockaddr);
-	// Receive Data
-	mesg = ReceivePacketHelper(sockfd, sending_addr);
-	// Check if receivedpacket is a DATA packet
+	// Receive Something
+	ReceivePacketHelper(sockfd, sending_addr, mesg);
 
-	int receivedOPCode = std::stoi(std::string(1,mesg[0]) + mesg[1]);
-	if (receivedOPCode == ERROR) {
+	// translating it aback to ntohs
+	unsigned short* bufferPointer = nullptr;
+	bufferPointer = reinterpret_cast<unsigned short *>(mesg);
+	unsigned short opNumb = ntohs(*bufferPointer);
+	int opCode = (int)opNumb;
+	std::cout << "convert ntohs op: " << opCode << std::endl;
 
-	}
-	if (receivedOPCode == DATA) {
-		std::string blockNumString = std::string(1, mesg[2]) + mesg[3];
-		std::cout << "Data Received! Block Number: " << blockNumString << std::endl;
+	if (opCode == RRQ) {
+		std::cout<< "RRQ received"<<std::endl;
+	} else if (opCode == WRQ) {
+		std::cout<< "WRQ received"<<std::endl;
+	}else if (opCode == DATA) {
+		std::cout<< "DATA received"<<std::endl;
+	} else if (opCode == ACK) {
+		std::cout<< "ACK received"<<std::endl;
+	} else if (opCode == ERROR) {
+		std::cout<< "ERROR received"<<std::endl;
 	} else {
-		std::cout << "DATA not received" << std::endl;
+		std::cout<< "Error: Unsupported OP code received:" << opCode <<std::endl;
 	}
 
 	//// STILL NEEDS WORK ////////////////////////
@@ -147,11 +157,11 @@ void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sock
 }
 
 // returns the content of the byteStream already interpreted as a char*
-char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
+void tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr, char mesg[MAXMESG]) {
 	std::cout<< "in tftp::ReceivePacketHelper()"<<std::endl;
 	int n; // for debugging
 	int clilen;
-	char mesg[MAXMESG];
+	//char mesg[MAXMESG];
 	clilen = sizeof(struct sockaddr);
 	n = recvfrom(sockfd, mesg, MAXMESG, 0, &*sending_addr, (socklen_t*)&clilen);
 	if (n < 0) { // for debugging
@@ -160,6 +170,28 @@ char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
 	} else {
 		std::cout<< "no issue receiving"<<std::endl;
 	}
+/*
+	// translating it aback to ntohs
+	unsigned short* bufferPointer = nullptr;
+	bufferPointer = reinterpret_cast<unsigned short *>(mesg);
+	unsigned short opNumb = ntohs(*bufferPointer);
+	std::cout << "convert ntohs op: " << opNumb << std::endl;
+
+	switch (opNumb) {
+		case RRQ:
+			//mesg[0] = '1';
+		case WRQ:
+			//mesg[0] = '2';
+		case DATA:
+			//mesg[0] = '3';
+		case ACK:
+			//mesg[0] = '4';
+		case ERROR:
+			//mesg[0] = '5';
+		default:
+			std::cout<< "opNumber error. Received:"<< opNumb <<std::endl;
+	}
+
 
 	std::cout<< "whole buffer after being received:" << *mesg << *mesg + 1;
 	for (int i = 2; i < MAXMESG; ++i) {
@@ -172,25 +204,13 @@ char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
 	int opNumber = (int)testNumShort;
 	std::cout<< opNumber<<std::endl;
 
-	switch (opNumber) {
-		case RRQ:
-			mesg[0] = '1';
-		case WRQ:
-			mesg[0] = '2';
-		case DATA:
-			mesg[0] = '3';
-		case ACK:
-			mesg[0] = '4';
-		case ERROR:
-			mesg[0] = '5';
-		default:
-			std::cout<< "opNumber error:"<< opNumber <<std::endl;
-	}
+
+
 
 	//char buffPointer[MAXMESG];
-	//*buffPointer = static_cast<char>(ntohs(mesg));
+	//*buffPointer = static_cast<char>(ntohs(mesg));*/
 
-	return mesg;
+	//return mesg;
 }
 
 void tftp::BuildAckMessage(int blockNumber, char* buffer[MAXMESG]) {
@@ -270,8 +290,6 @@ int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* f
 	return m;
 }
 
-
-
 char** tftp::GetFileData(char* fileName) {
 
 	//open and reading Linux commands:
@@ -295,4 +313,27 @@ char** tftp::GetFileData(char* fileName) {
 
 	close(fd); // once finish reading whole file, close text file
 	return nullptr;
+}
+
+void tftp::WriteToFile(char *fileName, char *dataBuffer) {
+	std::cout<< "in tftp::WriteToFile()"<<std::endl;
+
+	// Checks if file exists
+	std::ifstream infile(fileName);
+	if (infile.good()) {
+		// File exists, write starting at the last point of the file
+
+	} else {
+		// File doesn't exist. create new file with provided filename and write starting at the beginning
+		std::string myFileName = fileName;
+		std::ofstream outfile (myFileName);
+
+		for (int i = 0; i < sizeof(dataBuffer); i++) {
+			outfile << dataBuffer[i];
+		}
+
+		outfile.close();
+
+	}
+
 }
