@@ -15,26 +15,28 @@
 char *progname;
 
 
-char* CreateDataPacket(char* filename) {
+void CreateDataPacket(char* filename, char buffer[MAXMESG]) {
 	std::cout<< "in CreateDataPacket()"<<std::endl;
-	char buffer[MAXMESG];
-	bzero(buffer, sizeof(buffer));
+	//char buffer[MAXMESG];
+	bzero(buffer, (MAXMESG));
 	char* bufpoint = buffer;
 
-	std::cout<< "OP:";
-	std::cout << DATA <<std::endl;
-	unsigned short htonsNum = 3;
-	*buffer = htons(htonsNum);
+	std::cout<< "creating data packet" <<std::endl;
 
-	bufpoint = buffer + 2; // move pointer to block number
+	unsigned short opValue = DATA;
+	unsigned short* opCodePtr = (unsigned short *) buffer;
+	*opCodePtr = htons(opValue);
+	std::cout<< "OP:";
+	std::cout << opValue <<std::endl;
+
+
+	opCodePtr++; // move pointer to block number
 	std::cout<< "Block#:";
 	unsigned short blockNumber = 1; // temporary for testing
+	*opCodePtr = htons(blockNumber);
 	std::cout << blockNumber <<std::endl;
-	*bufpoint = htons(blockNumber);
 
-	std::cout<< "creating data packet" <<std::endl;
-	bufpoint = buffer + 2; // move pointer to file name
-
+	bufpoint = buffer + 4; // move pointer to file name
 	//FileData//////////////////////////////////////////////////////////////////
 	//open and reading Linux commands:
 	int fd = open(filename, O_RDONLY); // open text file
@@ -61,15 +63,39 @@ char* CreateDataPacket(char* filename) {
 	close(fd); // once finish reading whole file, close text file
 	///////////////////////////////////////////////////////////////////////////
 
+
 	std::cout<< "whole data buffer after being created:";
-	std::cout << *buffer << *(buffer + 1);
-	std::cout << *(buffer + 2) << *(buffer + 3);
+	unsigned short opNumber = ntohs(buffer[1]);
+	std::cout<< opNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+	printf("%x,%x", buffer[0], buffer[1]);
+	unsigned short blockNum = ntohs(buffer[3]);
+	std::cout<< blockNum; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+	printf("%x,%x", buffer[2], buffer[3]);
 	for (int i = 4; i < MAXMESG; ++i) {
+		if (buffer[i] == NULL)
+		{
+			std::cout<< " ";
+		}
 		std::cout<< buffer[i];
 	}
 	std::cout<<std::endl << "END OF FILE DATA" << std::endl;
 
-	return buffer;
+
+
+	// test translating it aback to ntohs
+	unsigned short* bufferPointer = nullptr;
+	bufferPointer = reinterpret_cast<unsigned short *>(buffer);
+	unsigned short opNumb = ntohs(*bufferPointer);
+	std::cout << "test convert ntohs op: " << opNumb << std::endl;
+
+	unsigned short* bufferBPointer = nullptr;
+	bufferBPointer = reinterpret_cast<unsigned short *>(buffer + 2);
+	unsigned short bNumber = ntohs(*bufferBPointer);
+	std::cout << "test convert ntohs block#: " << bNumber << std::endl;
+
+	//dataBuffer = buffer;
 }
 
 
@@ -164,9 +190,71 @@ int main(int argc, char *argv[]) {
 			std::cout<< "op is RRQ" <<std::endl;
             // if RRQ, call tftp shared sending function
             //tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
-			char *fileBuffer = nullptr;
+			char fileBuffer[MAXMESG];
 			//bzero(fileBuffer, MAXMESG);
-			fileBuffer = CreateDataPacket(filename);
+			CreateDataPacket(filename, fileBuffer);
+
+
+
+
+
+
+			// Test what is in the packet before being sent/////////////////////////////////////////////////////////////
+			std::cout<< "whole data buffer before being sent:";
+			unsigned short opTempNumber = ntohs(fileBuffer[1]);
+			std::cout<< opTempNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+			printf("%x,%x", fileBuffer[0], fileBuffer[1]);
+			unsigned short blockNum = ntohs(fileBuffer[3]);
+			std::cout<< blockNum; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+			printf("%x,%x", fileBuffer[2], fileBuffer[3]);
+			for (int i = 4; i < MAXMESG; ++i) {
+				if (fileBuffer[i] == NULL)
+				{
+					std::cout<< " ";
+				}
+				std::cout<< fileBuffer[i];
+			}
+			std::cout<<std::endl << "END OF FILE DATA" << std::endl;
+
+
+
+			// test translating it aback to ntohs
+			unsigned short* bufferTempPointer = nullptr;
+			bufferTempPointer = reinterpret_cast<unsigned short *>(fileBuffer);
+			unsigned short opNumb = ntohs(*bufferTempPointer);
+			std::cout << "test convert ntohs op: " << opNumb << std::endl;
+
+			unsigned short* bufferBPointer = nullptr;
+			bufferBPointer = reinterpret_cast<unsigned short *>(fileBuffer + 2);
+			unsigned short bNumber = ntohs(*bufferBPointer);
+			std::cout << "test convert ntohs block#: " << bNumber << std::endl;
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+			// Send the data packet to client /////////////////////////////////////////////////
+			std::cout<< "sending data packet" <<std::endl;
+			int n = sendto(sockfd, fileBuffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
+			if (n < 0) {
+				printf("%s: sendto error\n",progname);
+				exit(4);
+			} else {
+				std::cout<< "no issue sending packet" <<std::endl;
+			}
+			// ////////////////////////////////////////////////////////////////////////////////
+
+
 		} else
         if (opNumber == WRQ) {
 			std::cout<< "op is WRQ"<<std::endl;

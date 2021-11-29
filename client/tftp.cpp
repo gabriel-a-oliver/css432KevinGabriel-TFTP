@@ -146,6 +146,53 @@ void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sock
 	}
 }
 
+// returns the content of the byteStream already interpreted as a char*
+char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
+	std::cout<< "in tftp::ReceivePacketHelper()"<<std::endl;
+	int n; // for debugging
+	int clilen;
+	char mesg[MAXMESG];
+	clilen = sizeof(struct sockaddr);
+	n = recvfrom(sockfd, mesg, MAXMESG, 0, &*sending_addr, (socklen_t*)&clilen);
+	if (n < 0) { // for debugging
+		printf(": recvfrom error\n");
+		exit(4);
+	} else {
+		std::cout<< "no issue receiving"<<std::endl;
+	}
+
+	std::cout<< "whole buffer after being received:" << *mesg << *mesg + 1;
+	for (int i = 2; i < MAXMESG; ++i) {
+		std::cout<< mesg[i];
+	}
+	std::cout<<std::endl;
+
+	std::cout<< "testing converting back with ntohs:";
+	unsigned short testNumShort = (*mesg + 1 << *mesg);
+	int opNumber = (int)testNumShort;
+	std::cout<< opNumber<<std::endl;
+
+	switch (opNumber) {
+		case RRQ:
+			mesg[0] = '1';
+		case WRQ:
+			mesg[0] = '2';
+		case DATA:
+			mesg[0] = '3';
+		case ACK:
+			mesg[0] = '4';
+		case ERROR:
+			mesg[0] = '5';
+		default:
+			std::cout<< "opNumber error:"<< opNumber <<std::endl;
+	}
+
+	//char buffPointer[MAXMESG];
+	//*buffPointer = static_cast<char>(ntohs(mesg));
+
+	return mesg;
+}
+
 void tftp::BuildAckMessage(int blockNumber, char* buffer[MAXMESG]) {
 	char *bufpoint; // for building packet
 	//char buffer[MAXMESG]; // buffer with arbituary 512 size
@@ -223,52 +270,7 @@ int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* f
 	return m;
 }
 
-// returns the content of the byteStream already interpreted as a char*
-char* tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr) {
-	std::cout<< "in tftp::ReceivePacketHelper()"<<std::endl;
-	int n; // for debugging
-	int clilen;
-	char mesg[MAXMESG];
-	clilen = sizeof(struct sockaddr);
-	n = recvfrom(sockfd, mesg, MAXMESG, 0, &*sending_addr, (socklen_t*)&clilen);
-	if (n < 0) { // for debugging
-		printf(": recvfrom error\n");
-		exit(4);
-	} else {
-		std::cout<< "no issue receiving"<<std::endl;
-	}
 
-	std::cout<< "whole buffer after being received:" << *mesg << *mesg + 1;
-	for (int i = 2; i < MAXMESG; ++i) {
-		std::cout<< mesg[i];
-	}
-	std::cout<<std::endl;
-
-	std::cout<< "testing converting back with ntohs:";
-	unsigned short testNumShort = (*mesg + 1 << *mesg);
-	int opNumber = (int)testNumShort;
-	std::cout<< opNumber<<std::endl;
-
-	switch (opNumber) {
-		case RRQ:
-			mesg[0] = '1';
-		case WRQ:
-			mesg[0] = '2';
-		case DATA:
-			mesg[0] = '3';
-		case ACK:
-			mesg[0] = '4';
-		case ERROR:
-			mesg[0] = '5';
-		default:
-			std::cout<< "opNumber error:"<< opNumber <<std::endl;
-	}
-
-	//char buffPointer[MAXMESG];
-	//*buffPointer = static_cast<char>(ntohs(mesg));
-
-	return mesg;
-}
 
 char** tftp::GetFileData(char* fileName) {
 
