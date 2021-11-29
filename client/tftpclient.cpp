@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 		tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, dataBuffer);
 
 
-		//Break Down Packet/////////////////////////////////////////////////////////////////////////////////////////////////////
+		//Break Down Packet/////////////////////////////////////////////////////////////////////////////////////////////
 		std::cout<< "whole data after being received:";
 		unsigned short opTempNumber = ntohs(dataBuffer[1]);
 		std::cout<< opTempNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
@@ -135,8 +135,6 @@ int main(int argc, char *argv[])
 		}
 		std::cout<<std::endl << "END OF FILE DATA" << std::endl;
 
-
-
 		// translating it aback to ntohs
 		unsigned short* bufferTempPointer = nullptr;
 		bufferTempPointer = reinterpret_cast<unsigned short *>(dataBuffer);
@@ -149,10 +147,60 @@ int main(int argc, char *argv[])
 		std::cout << "convert ntohs block#: " << bNumber << std::endl;
 
 		char* fileContentBuffer = dataBuffer + 4;
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		tftp::WriteToFile(filename, fileContentBuffer);
+
+		// create ACK packet and send to server ////////////////////////////////////////////////////////////////////////
+
+		if (opNumb == DATA) {
+			std::cout<< "Received Data packet, creating corresponding ack packet"<<std::endl;
+
+			std::cout<< "creating ack packet" <<std::endl;
+			char ackBuffer[MAXMESG];
+			bzero(ackBuffer, MAXMESG);
+			char* ackBufPoint = ackBuffer + 2;
+
+			unsigned short ackOpValue = ACK;
+			unsigned short* ackOpCodePtr = (unsigned short *) ackBuffer;
+			*ackOpCodePtr = htons(ackOpValue);
+
+			unsigned short ackBlockValue = 1; // temporary value for testing
+			unsigned short* ackBlockPtr = (unsigned short *) ackBuffer + 1;
+			*ackBlockPtr = htons(ackBlockValue);
+
+			std::cout<< "whole buffer before being sent:";
+			unsigned short tempAckOpNumber = ntohs(ackBuffer[1]);
+			std::cout<< tempAckOpNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+			printf("%x,%x", ackBuffer[0], ackBuffer[1]);
+			unsigned short tempAckBlockNumber = ntohs(ackBuffer[3]);
+			std::cout<< tempAckBlockNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+			printf("%x,%x", ackBuffer[2], ackBuffer[3]);
+			for (int i = 4; i < MAXMESG; ++i) {
+				if (ackBuffer[i] == NULL)
+				{
+					std::cout<< " ";
+				}
+				std::cout<< ackBuffer[i];
+			}
+			std::cout<<std::endl;
+
+			std::cout<< "sending packet" <<std::endl;
+			int n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+			if (n < 0) {
+				printf("%s: sendto error\n",progname);
+				exit(4);
+			} else {
+				std::cout<< "no issue sending packet" <<std::endl;
+			}
+
+
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	} else if (op[1] == 'w') {
 		// if WRQ, call tftp shared sending function (may need to receive ACK0 first)
 		tftp::SendMessage(sockfd, (struct sockaddr *) &cli_addr, (struct sockaddr *) &serv_addr, filename);

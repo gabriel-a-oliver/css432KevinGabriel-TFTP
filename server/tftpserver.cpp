@@ -137,11 +137,11 @@ int main(int argc, char *argv[]) {
         clilen = sizeof(struct sockaddr);
 
         n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
-		std::cout << "received something" << std::endl;
 		if (n < 0) {
 			printf("%s: recvfrom error\n",progname);
 			exit(4);
 		}
+		std::cout << "received something" << std::endl;
 
         // print out received buffer
 		std::cout<< "whole buffer after being received:";
@@ -194,11 +194,6 @@ int main(int argc, char *argv[]) {
 			//bzero(fileBuffer, MAXMESG);
 			CreateDataPacket(filename, fileBuffer);
 
-
-
-
-
-
 			// Test what is in the packet before being sent/////////////////////////////////////////////////////////////
 			std::cout<< "whole data buffer before being sent:";
 			unsigned short opTempNumber = ntohs(fileBuffer[1]);
@@ -232,17 +227,6 @@ int main(int argc, char *argv[]) {
 			std::cout << "test convert ntohs block#: " << bNumber << std::endl;
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-
-
-
-
-
 			// Send the data packet to client /////////////////////////////////////////////////
 			std::cout<< "sending data packet" <<std::endl;
 			int n = sendto(sockfd, fileBuffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
@@ -254,6 +238,34 @@ int main(int argc, char *argv[]) {
 			}
 			// ////////////////////////////////////////////////////////////////////////////////
 
+			// Wait to receive ACK from client /////////////////////////////////////////////////////////////////////////
+			std::cout<< "Waiting to receive ack from client"<<std::endl;
+			char ackBuffer[MAXMESG];
+			bzero(ackBuffer, MAXMESG);
+			n = recvfrom(sockfd, ackBuffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
+			if (n < 0) {
+				printf("%s: recvfrom error\n",progname);
+				exit(4);
+			}
+			std::cout << "received something" << std::endl;
+
+			// translating OPcode back to ntohs
+			unsigned short* ackBufferPointer = nullptr;
+			ackBufferPointer = reinterpret_cast<unsigned short *>(ackBuffer);
+			unsigned short ackOpNumb = ntohs(*ackBufferPointer);
+			std::cout << "convert ntohs op: " << ackOpNumb << std::endl;
+			// translating block# back to ntohs
+			unsigned short* ackBlockBufferPointer = nullptr;
+			ackBlockBufferPointer = reinterpret_cast<unsigned short *>(ackBuffer + 2);
+			unsigned short ackBlockNumb = ntohs(*ackBlockBufferPointer);
+			std::cout << "convert ntohs block#: " << ackBlockNumb << std::endl;
+			if (ackOpNumb == ACK) {
+				std::cout<< "ack received. transaction complete for block:"<< ackBlockNumb <<std::endl;
+			} else {
+				std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		} else
         if (opNumber == WRQ) {

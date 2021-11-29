@@ -82,12 +82,6 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/client/tftp.cpp">
-			<Option target="css432KevinGabriel"/>
-		</Unit>
-		<Unit filename="/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/client/tftp.h">
-			<Option target="css432KevinGabriel"/>
-		</Unit>
 		<Unit filename="/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/client/tftpclient.cpp">
 			<Option target="css432KevinGabriel"/>
 		</Unit>

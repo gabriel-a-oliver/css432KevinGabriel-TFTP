@@ -8,7 +8,6 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/client/tftp.cpp" "/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/client/tftp.cpp.o"
   "/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/client/tftpclient.cpp" "/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/client/tftpclient.cpp.o"
   "/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/server/tftpserver.cpp" "/mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/server/tftpserver.cpp.o"
   )

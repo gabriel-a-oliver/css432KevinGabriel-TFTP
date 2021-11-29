@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /home/olivergabe/cmake-3.20.3-linux-x86_64/bin/cmake
+CMAKE_COMMAND = /home/olivergabe/bin/cmake
 
 # The command to remove a file.
-RM = /home/olivergabe/cmake-3.20.3-linux-x86_64/bin/cmake -E rm -f
+RM = /home/olivergabe/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /mnt/c/Users/olive/Documents/GitHub/css432KevinGabriel/cmake-
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/home/olivergabe/cmake-3.20.3-linux-x86_64/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/home/olivergabe/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -78,7 +78,7 @@ rebuild_cache/fast: rebuild_cache
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/home/olivergabe/cmake-3.20.3-linux-x86_64/bin/cmake-gui -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/home/olivergabe/bin/cmake-gui -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -128,30 +128,6 @@ css432KevinGabriel: cmake_check_build_system
 css432KevinGabriel/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/css432KevinGabriel.dir/build.make CMakeFiles/css432KevinGabriel.dir/build
 .PHONY : css432KevinGabriel/fast
-
-client/tftp.o: client/tftp.cpp.o
-.PHONY : client/tftp.o
-
-# target to build an object file
-client/tftp.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/css432KevinGabriel.dir/build.make CMakeFiles/css432KevinGabriel.dir/client/tftp.cpp.o
-.PHONY : client/tftp.cpp.o
-
-client/tftp.i: client/tftp.cpp.i
-.PHONY : client/tftp.i
-
-# target to preprocess a source file
-client/tftp.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/css432KevinGabriel.dir/build.make CMakeFiles/css432KevinGabriel.dir/client/tftp.cpp.i
-.PHONY : client/tftp.cpp.i
-
-client/tftp.s: client/tftp.cpp.s
-.PHONY : client/tftp.s
-
-# target to generate assembly for a file
-client/tftp.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/css432KevinGabriel.dir/build.make CMakeFiles/css432KevinGabriel.dir/client/tftp.cpp.s
-.PHONY : client/tftp.cpp.s
 
 client/tftpclient.o: client/tftpclient.cpp.o
 .PHONY : client/tftpclient.o
@@ -210,9 +186,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... css432KevinGabriel"
-	@echo "... client/tftp.o"
-	@echo "... client/tftp.i"
-	@echo "... client/tftp.s"
 	@echo "... client/tftpclient.o"
 	@echo "... client/tftpclient.i"
 	@echo "... client/tftpclient.s"
