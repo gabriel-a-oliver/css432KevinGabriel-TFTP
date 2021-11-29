@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
             // if WRQ, send ACK0 and call tftp shared receiving function
             // BuildAckMessage()
             // sendto()
-            tftp::ReceiveMessage(sockfd, &pcli_addr, (struct sockaddr *) &serv_addr);
+            tftp::ReceiveMessage(sockfd, &pcli_addr, (struct sockaddr *) &serv_addr, filename);
         } else {
 			std::cout<< "op was neither"<<std::endl;
 		}

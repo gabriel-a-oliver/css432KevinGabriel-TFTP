@@ -27,15 +27,15 @@ class tftp {
 
 public:
 	static void SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName);
-	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr);
+	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char buffer[MAXMESG]);
 	static void BuildAckMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildErrMessage(int blockNumber, char* buffer[MAXMESG]);
 	static void BuildDataMessage(int blockNumber, char* buffer[MAXMESG]);
-
+	static void WriteToFile(char *fileName, char *dataBuffer);
 private:
 	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
 	static void ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr, char mesg[MAXMESG]);
 	static char** GetFileData(char* fileName);
-	void WriteToFile(char *fileName, char *dataBuffer);
+
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H

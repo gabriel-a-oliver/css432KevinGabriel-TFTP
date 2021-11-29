@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <fcntl.h>
+#include <cassert>
 
 // to be moved to shared tftp file
 #define RRQ	1
@@ -83,7 +84,7 @@ void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockadd
 
 // This function is called if the server receives a WRQ
 // or if the client sends an RRQ
-void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr) {
+void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char buffer[MAXMESG]) {
 	std::cout<< "tftp::ReceiveMessage()"<<std::endl;
 	/* General idea:
 	 * receive the socket, the origin address, the recipient's address, and the name of the file want to receive
@@ -107,15 +108,15 @@ void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sock
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 
 	int n, m, clilen;
-	char mesg[MAXMESG];
-	bzero(mesg, (MAXMESG));
+	//char buffer[MAXMESG];
+	bzero(buffer, (MAXMESG));
 	clilen = sizeof(struct sockaddr);
 	// Receive Something
-	ReceivePacketHelper(sockfd, sending_addr, mesg);
+	ReceivePacketHelper(sockfd, sending_addr, buffer);
 
 	// translating it aback to ntohs
 	unsigned short* bufferPointer = nullptr;
-	bufferPointer = reinterpret_cast<unsigned short *>(mesg);
+	bufferPointer = reinterpret_cast<unsigned short *>(buffer);
 	unsigned short opNumb = ntohs(*bufferPointer);
 	int opCode = (int)opNumb;
 	std::cout << "convert ntohs op: " << opCode << std::endl;
@@ -134,26 +135,17 @@ void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sock
 		std::cout<< "Error: Unsupported OP code received:" << opCode <<std::endl;
 	}
 
-	//// STILL NEEDS WORK ////////////////////////
-	// Perform more header checks HERE
-	/*
-	 if (some issue) {
-	 	buffer = BuildErrMessage(int blockNumber, reinterpret_cast<char **>(buffer))
-	 } else { build acknowledgement}
-	*/
-	// Unpack message for data //
 
-
-	// assuming it received a data packet
+	/*// assuming it received a data packet
 	char* buffer[MAXMESG];
-	BuildAckMessage(/*Get Block Number*/1, reinterpret_cast<char **>(buffer));
+	BuildAckMessage(*//*Get Block Number*//*1, reinterpret_cast<char **>(buffer));
 
 	// Send Acknowledgement
 	m = sendto(sockfd, *buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 	if (m < 0) {
 		printf(": sendto error\n");
 		exit(3);
-	}
+	}*/
 }
 
 // returns the content of the byteStream already interpreted as a char*
@@ -318,19 +310,68 @@ char** tftp::GetFileData(char* fileName) {
 void tftp::WriteToFile(char *fileName, char *dataBuffer) {
 	std::cout<< "in tftp::WriteToFile()"<<std::endl;
 
+	std::cout<< "printing whole buffer before writting to file"<<std::endl;
+	for (int i = 0; i < MAXMESG; ++i) {
+		if (dataBuffer[i] == NULL)
+		{
+			std::cout<< " ";
+		}
+		std::cout<< dataBuffer[i];
+	}
+	std::cout<<std::endl << "END OF FILE DATA" << std::endl;
+
 	// Checks if file exists
 	std::ifstream infile(fileName);
 	if (infile.good()) {
+		std::cout<< "File exists, writing to existing file:"<<std::endl;
 		// File exists, write starting at the last point of the file
+		// help from: https://mathbits.com/MathBits/CompSci/Files/End.htm
+		int filePosition = 0;
+		char datum;
+		std::ifstream fin;
+
+		fin.open(fileName);
+		assert (!fin.fail());
+		fin >> datum;
+
+		while(!fin.eof()) {
+			std::cout<< datum <<std::endl;
+			fin >> datum;
+			filePosition++;
+		}
+
+		fin.close();
+		assert(!fin.fail());
+
+		// write to file
+		std::fstream output;
+		output.open(fileName);
+		for (int i = 0; i < sizeof(dataBuffer); i++) {
+			if (dataBuffer[i] == NULL) {
+				std::cout << std::endl << "Encountered null in file. Ending writing"<<std::endl;
+				break;
+			}
+			output.seekp(filePosition);
+			output.put(dataBuffer[i]);
+			filePosition++;
+		}
 
 	} else {
+		std::cout<< "File does not exist, creating and writing to new file"<<std::endl;
 		// File doesn't exist. create new file with provided filename and write starting at the beginning
+		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
 		std::string myFileName = fileName;
 		std::ofstream outfile (myFileName);
-
-		for (int i = 0; i < sizeof(dataBuffer); i++) {
+		std::cout << "pushing data to file:" << std::endl;
+		for (int i = 0; i < MAXDATA; i++) {
+			if (dataBuffer[i] == NULL) {
+				std::cout<< "encountered null in file"<<std::endl;
+				break;
+			}
+			std::cout << dataBuffer[i];
 			outfile << dataBuffer[i];
 		}
+		std::cout << std::endl << "End of data pushing to file" << std::endl;
 
 		outfile.close();
 
