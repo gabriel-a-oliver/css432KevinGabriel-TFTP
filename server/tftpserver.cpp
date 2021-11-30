@@ -39,7 +39,7 @@ void CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]) {
 	bufpoint = fileBuffer + 4; // move pointer to file name
 	//FileData//////////////////////////////////////////////////////////////////
 	//open and reading Linux commands:
-	std::cout << "Get File Name:" << tftp::GetFileNameStr(buffer) << "|" <<std::endl;
+	std::cout << "Get File Name:" << tftp::GetFileNameStr(buffer) <<std::endl;
 	int fd = open(const_cast<char*>(tftp::GetFileNameStr(buffer).c_str()), O_RDONLY); // open text file
 	std::cout<< "fd value:" << fd <<std::endl;
 	if (fd < 0) {
@@ -63,40 +63,6 @@ void CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]) {
 
 	close(fd); // once finish reading whole file, close text file
 	///////////////////////////////////////////////////////////////////////////
-
-
-	std::cout<< "whole data buffer after being created:";
-	unsigned short opNumber = ntohs(fileBuffer[1]);
-	std::cout<< opNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-	printf("%x,%x", fileBuffer[0], fileBuffer[1]);
-	unsigned short blockNum = ntohs(fileBuffer[3]);
-	std::cout<< blockNum; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-	printf("%x,%x", fileBuffer[2], fileBuffer[3]);
-	for (int i = 4; i < MAXMESG; ++i) {
-		if (fileBuffer[i] == NULL)
-		{
-			std::cout<< " ";
-		}
-		std::cout<< fileBuffer[i];
-	}
-	std::cout<<std::endl << "END OF FILE DATA" << std::endl;
-
-
-
-	// test translating it aback to ntohs
-	unsigned short* bufferPointer = nullptr;
-	bufferPointer = reinterpret_cast<unsigned short *>(fileBuffer);
-	unsigned short opNumb = ntohs(*bufferPointer);
-	std::cout << "test convert ntohs op: " << opNumb << std::endl;
-
-	unsigned short* bufferBPointer = nullptr;
-	bufferBPointer = reinterpret_cast<unsigned short *>(fileBuffer + 2);
-	unsigned short bNumber = ntohs(*bufferBPointer);
-	std::cout << "test convert ntohs block#: " << bNumber << std::endl;
-
-	//dataBuffer = buffer;
 }
 
 
@@ -143,93 +109,18 @@ int main(int argc, char *argv[]) {
 			exit(4);
 		}
 		std::cout << "received something" << std::endl;
-
-        // print out received buffer
-		//std::cout<< "whole buffer after being received:";
-		/*printf("%x,%x", buffer[0], buffer[1]);
-        for (int i = 2; i < MAXMESG; ++i) {
-			if (buffer[i] == NULL)
-			{
-				std::cout<< " ";
-			}
-			std::cout<< buffer[i];
-		}
-		std::cout<<std::endl;*/
 		tftp::PrintPacket(buffer);
 
 		unsigned short opNumber = tftp::GetPacketOPCode(buffer);
 
-		/*unsigned short* bufferPointer = nullptr;
-		bufferPointer = reinterpret_cast<unsigned short *>(buffer);
-		//unsigned short opNumber = ntohs(*bufferPointer);
-
-        std::cout << "converted ntohs op: " << opNumber << std::endl;
-        
-
-        char *bufpoint = buffer + 2;
-		std::cout<< "bufpoint: " << *bufpoint <<std::endl;
-
-		int fileNameLength = 0;
-		std::cout<< "checking for file name length"<<std::endl;
-		for (int i = 2; i < MAXMESG; i++) {
-			if (buffer[i] != NULL) {
-				fileNameLength++;
-			}
-			else {
-				break;
-			}
-		}
-		char filename[fileNameLength];
-		std::cout<< "fileNameLength:" << fileNameLength<<std::endl;
-		bcopy(bufpoint, filename, fileNameLength);
-        //strcpy(filename, bufpoint);
-		std::cout<< "filename:";
-        for (int i = 0; i < fileNameLength; i++) {
-            std::cout << filename[i];
-        }
-        std::cout << std::endl;*/
-
 		std::cout << "checking if op is RRQ or WRQ" << std::endl;
         if (opNumber == RRQ) {
 			std::cout<< "op is RRQ" <<std::endl;
-            // if RRQ, call tftp shared sending function
-            //tftp::SendMessage(sockfd, (struct sockaddr *) &serv_addr, &pcli_addr, filename);
 			char fileBuffer[MAXMESG];
-			//bzero(fileBuffer, MAXMESG);
+			bzero(fileBuffer, MAXMESG);
 			CreateDataPacket(buffer,fileBuffer);
+			tftp::PrintPacket(fileBuffer);
 
-			// Test what is in the packet before being sent/////////////////////////////////////////////////////////////
-			std::cout<< "whole data buffer before being sent:";
-			unsigned short opTempNumber = ntohs(fileBuffer[1]);
-			std::cout<< opTempNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-			printf("%x,%x", fileBuffer[0], fileBuffer[1]);
-			unsigned short blockNum = ntohs(fileBuffer[3]);
-			std::cout<< blockNum; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-			printf("%x,%x", fileBuffer[2], fileBuffer[3]);
-			for (int i = 4; i < MAXMESG; ++i) {
-				if (fileBuffer[i] == NULL)
-				{
-					std::cout<< " ";
-				}
-				std::cout<< fileBuffer[i];
-			}
-			std::cout<<std::endl << "END OF FILE DATA" << std::endl;
-
-
-
-			// test translating it aback to ntohs
-			unsigned short* bufferTempPointer = nullptr;
-			bufferTempPointer = reinterpret_cast<unsigned short *>(fileBuffer);
-			unsigned short opNumb = ntohs(*bufferTempPointer);
-			std::cout << "test convert ntohs op: " << opNumb << std::endl;
-
-			unsigned short* bufferBPointer = nullptr;
-			bufferBPointer = reinterpret_cast<unsigned short *>(fileBuffer + 2);
-			unsigned short bNumber = ntohs(*bufferBPointer);
-			std::cout << "test convert ntohs block#: " << bNumber << std::endl;
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			// Send the data packet to client /////////////////////////////////////////////////
 			std::cout<< "sending data packet" <<std::endl;
@@ -253,18 +144,11 @@ int main(int argc, char *argv[]) {
 			}
 			std::cout << "received something" << std::endl;
 
-			// translating OPcode back to ntohs
-			unsigned short* ackBufferPointer = nullptr;
-			ackBufferPointer = reinterpret_cast<unsigned short *>(ackBuffer);
-			unsigned short ackOpNumb = ntohs(*ackBufferPointer);
-			std::cout << "convert ntohs op: " << ackOpNumb << std::endl;
-			// translating block# back to ntohs
-			unsigned short* ackBlockBufferPointer = nullptr;
-			ackBlockBufferPointer = reinterpret_cast<unsigned short *>(ackBuffer + 2);
-			unsigned short ackBlockNumb = ntohs(*ackBlockBufferPointer);
-			std::cout << "convert ntohs block#: " << ackBlockNumb << std::endl;
+			// check if received packet is the ack
+			tftp::PrintPacket(ackBuffer);
+			unsigned short ackOpNumb = tftp::GetPacketOPCode(ackBuffer);
 			if (ackOpNumb == ACK) {
-				std::cout<< "ack received. transaction complete for block:"<< ackBlockNumb <<std::endl;
+				std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(ackBuffer) <<std::endl;
 			} else {
 				std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 			}

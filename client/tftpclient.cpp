@@ -86,19 +86,7 @@ int main(int argc, char *argv[])
 	strcpy(bufpoint, "octet"); // add mode to buffer
 	bufpoint += strlen("octet") + 1; // move pointer and add null byte
 
-	std::cout<< "whole buffer before being sent:";
-	unsigned short opNumber = ntohs(buffer[1]);
-	std::cout<< opNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-	printf("%x,%x", buffer[0], buffer[1]);
-	for (int i = 2; i < MAXMESG; ++i) {
-		if (buffer[i] == NULL)
-		{
-			std::cout<< " ";
-		}
-		std::cout<< buffer[i];
-	}
-	std::cout<<std::endl;
+	tftp::PrintPacket(buffer);
 
 	std::cout<< "sending packet" <<std::endl;
 	int n = sendto(sockfd, buffer, bufpoint-buffer, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
@@ -114,45 +102,14 @@ int main(int argc, char *argv[])
 		bzero(dataBuffer, sizeof(dataBuffer));
 		// if RRQ, call tftp shared receiving function
 		tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, dataBuffer);
-
-
-		//Break Down Packet/////////////////////////////////////////////////////////////////////////////////////////////
-		std::cout<< "whole data after being received:";
-		unsigned short opTempNumber = ntohs(dataBuffer[1]);
-		std::cout<< opTempNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-		//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-		printf("%x,%x", dataBuffer[0], dataBuffer[1]);
-		unsigned short blockNum = ntohs(dataBuffer[3]);
-		std::cout<< blockNum; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-		//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-		printf("%x,%x", dataBuffer[2], dataBuffer[3]);
-		for (int i = 4; i < MAXMESG; ++i) {
-			if (dataBuffer[i] == NULL)
-			{
-				std::cout<< " ";
-			}
-			std::cout<< dataBuffer[i];
-		}
-		std::cout<<std::endl << "END OF FILE DATA" << std::endl;
-
-		// translating it aback to ntohs
-		unsigned short* bufferTempPointer = nullptr;
-		bufferTempPointer = reinterpret_cast<unsigned short *>(dataBuffer);
-		unsigned short opNumb = ntohs(*bufferTempPointer);
-		std::cout << "convert ntohs op: " << opNumb << std::endl;
-
-		unsigned short* bufferBPointer = nullptr;
-		bufferBPointer = reinterpret_cast<unsigned short *>(dataBuffer + 2);
-		unsigned short bNumber = ntohs(*bufferBPointer);
-		std::cout << "convert ntohs block#: " << bNumber << std::endl;
+		tftp::PrintPacket(dataBuffer);
 
 		char* fileContentBuffer = dataBuffer + 4;
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		tftp::WriteToFile(filename, fileContentBuffer);
 
 		// create ACK packet and send to server ////////////////////////////////////////////////////////////////////////
-
+		unsigned short opNumb = tftp::GetPacketOPCode(dataBuffer);
 		if (opNumb == DATA) {
 			std::cout<< "Received Data packet, creating corresponding ack packet"<<std::endl;
 
@@ -169,23 +126,7 @@ int main(int argc, char *argv[])
 			unsigned short* ackBlockPtr = (unsigned short *) ackBuffer + 1;
 			*ackBlockPtr = htons(ackBlockValue);
 
-			std::cout<< "whole buffer before being sent:";
-			unsigned short tempAckOpNumber = ntohs(ackBuffer[1]);
-			std::cout<< tempAckOpNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-			printf("%x,%x", ackBuffer[0], ackBuffer[1]);
-			unsigned short tempAckBlockNumber = ntohs(ackBuffer[3]);
-			std::cout<< tempAckBlockNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
-			//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
-			printf("%x,%x", ackBuffer[2], ackBuffer[3]);
-			for (int i = 4; i < MAXMESG; ++i) {
-				if (ackBuffer[i] == NULL)
-				{
-					std::cout<< " ";
-				}
-				std::cout<< ackBuffer[i];
-			}
-			std::cout<<std::endl;
+			tftp::PrintPacket(ackBuffer);
 
 			std::cout<< "sending packet" <<std::endl;
 			int n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));

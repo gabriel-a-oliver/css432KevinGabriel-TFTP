@@ -420,6 +420,7 @@ std::string tftp::PacketToString(char buffer[MAXMESG]) {
 		opStr = "4";
 		blockNumber = tftp::GetBlockNumber(buffer);
 		blockStr = tftp::ConvertUnsignedShortToString(blockNumber);
+		printResult = opStr + blockStr;
 	} else if (opNumber == ERROR) {
 		opStr = "5";
 		errorNumber = tftp::GetBlockNumber(buffer);
