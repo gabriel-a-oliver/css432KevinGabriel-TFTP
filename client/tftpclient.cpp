@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 		std::cout<< "neither r or w" <<std::endl;
 	}
 
-	std::cout<< "creating packet" <<std::endl;
+	std::cout<< "creating RRQ packet" <<std::endl;
 	bufpoint = buffer + 2; // move pointer to file name
 	strcpy(bufpoint, filename); // add file name to buffer
 	bufpoint += strlen(filename) + 1; //move pointer and add null byte

@@ -15,6 +15,7 @@
 #include <fstream>
 #include <fcntl.h>
 #include <cassert>
+#include <sstream>
 
 // to be moved to shared tftp file
 #define RRQ	1
@@ -205,35 +206,35 @@ void tftp::ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr, char m
 	//return mesg;
 }
 
-void tftp::BuildAckMessage(int blockNumber, char* buffer[MAXMESG]) {
+void tftp::BuildAckMessage(int blockNumber, char buffer[MAXMESG]) {
 	char *bufpoint; // for building packet
 	//char buffer[MAXMESG]; // buffer with arbituary 512 size
 	*(short *)*buffer = htons(ACK);
-	bufpoint = *buffer + 2; // move pointer to file name
+	bufpoint = buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
 }
 
-void tftp::BuildErrMessage(int blockNumber, char* buffer[MAXMESG]) {
+void tftp::BuildErrMessage(int blockNumber, char buffer[MAXMESG]) {
 	char *bufpoint; // for building packet
 	//char buffer[512]; // buffer with arbituary 512 size
 	*(short *)*buffer = htons(ERROR);
-	bufpoint = *buffer + 2; // move pointer to file name
+	bufpoint = buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
 }
 
-void tftp::BuildDataMessage(int blockNumber, char* buffer[MAXMESG]) {
+void tftp::BuildDataMessage(int blockNumber, char buffer[MAXMESG]) {
 	char *bufpoint; // for building packet
 	//char buffer[MAXMESG]; // buffer with arbituary 512 size
 	*(short *)*buffer = htons(DATA);
-	bufpoint = *buffer + 2; // move pointer to file name
+	bufpoint = buffer + 2; // move pointer to file name
 	*(short *)buffer = htons(blockNumber);
-	bufpoint = *buffer + 4;
+	bufpoint = buffer + 4;
 }
 
 int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName) {
 	std::cout<< "tftp::SendMessageHelper()"<<std::endl;
-    
-    fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
+
+	fileName = const_cast<char*>("ClientTest.txt"); // temporary for testing
 
 	// NOTE: LOOPS WILL BE REQUIRED FOR CERTAIN FUNCTIONALITIES
 	char buffer[MAXMESG];
@@ -285,7 +286,7 @@ int tftp::SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* f
 char** tftp::GetFileData(char* fileName) {
 
 	//open and reading Linux commands:
-	#define MAXDATA 512
+#define MAXDATA 512
 
 	int fd = open(fileName, O_RDONLY); // open text file
 	std::cout<< "fd value:" << fd <<std::endl;
@@ -374,7 +375,172 @@ void tftp::WriteToFile(char *fileName, char *dataBuffer) {
 		std::cout << std::endl << "End of data pushing to file" << std::endl;
 
 		outfile.close();
-
 	}
+}
 
+// return any packet as a string
+std::string tftp::PacketToString(char buffer[MAXMESG]) {
+	unsigned short opNumber = tftp::GetPacketOPCode(buffer);
+	unsigned short blockNumber = NULL;
+	//std::cout<< opTempNumber; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+	std::string opStr = "";
+	std::string blockStr = "";
+	std::string fileNameStr = "";
+	std::string modeStr = "";
+	char dataArray[MAXDATA];
+	bzero(dataArray, sizeof(dataArray));
+	std::string dataStr = "";
+	unsigned short errorNumber = NULL;
+	std::string errorCodeStr = "";
+	char errorMessageArray[MAXDATA];
+	bzero(errorMessageArray, sizeof(errorMessageArray));
+	std::string errorMessageStr = "";
+
+	std::string printResult = "";
+
+	if (opNumber == RRQ) {
+		opStr = "1";
+		fileNameStr = tftp::GetFileNameStr(buffer);
+		modeStr = tftp::GetMode(buffer, fileNameStr);
+		printResult = opStr + fileNameStr + " " + modeStr + " ";
+	} else if (opNumber == WRQ) {
+		opStr = "2";
+		fileNameStr = tftp::GetFileNameStr(buffer);
+		modeStr = tftp::GetMode(buffer, fileNameStr);
+		printResult = opStr + fileNameStr + " " + modeStr + " ";
+	} else if (opNumber == DATA) {
+		opStr = "3";
+		blockNumber = tftp::GetBlockNumber(buffer);
+		blockStr = tftp::ConvertUnsignedShortToString(blockNumber);
+		tftp::GetDataContent(buffer, dataArray);
+		dataStr = std::string(dataArray);
+		printResult = opStr + blockStr + dataStr;
+	} else if (opNumber == ACK) {
+		opStr = "4";
+		blockNumber = tftp::GetBlockNumber(buffer);
+		blockStr = tftp::ConvertUnsignedShortToString(blockNumber);
+	} else if (opNumber == ERROR) {
+		opStr = "5";
+		errorNumber = tftp::GetBlockNumber(buffer);
+		errorCodeStr = ConvertUnsignedShortToString(errorNumber);
+		tftp::GetDataContent(buffer, errorMessageArray);
+		errorMessageStr = std::string(errorMessageArray);
+		printResult = opStr + errorCodeStr + errorMessageStr;
+	} else {
+		std::cout<< "Error. Unsupported OP code received:"<< opNumber <<std::endl;
+		exit(6);
+	}
+	return printResult;
+}
+
+// print any and the entire packet to console
+void tftp::PrintPacket(char buffer[MAXMESG]) {
+	std::cout<< "Printing Content of Packet:"<<std::endl;
+	std::string printResult = PacketToString(buffer);
+	std::cout<< printResult <<std::endl;
+	std::cout<< "END OF PACKET PRINT" <<std::endl;
+
+	/*std::cout<< "Printing:";
+
+
+	printf("%x,%x", dataBuffer[0], dataBuffer[1]);
+	unsigned short blockNum = ntohs(dataBuffer[3]);
+	std::cout<< blockNum; // This printing is wrong.  cout prints the bytes in ascii format, the value at buffer[1] is 1 , which is a non-printable ascii character, so you won't see anything on screen
+	//Instead, print the hex value of first two bytes. should be 0,1 for RRQ, 0,2 for WRQ
+	printf("%x,%x", dataBuffer[2], dataBuffer[3]);
+	for (int i = 4; i < MAXMESG; ++i) {
+		if (dataBuffer[i] == NULL)
+		{
+			std::cout<< " ";
+		}
+		std::cout<< dataBuffer[i];
+	}
+	std::cout<<std::endl << "END OF FILE DATA" << std::endl;*/
+}
+
+unsigned short tftp::GetPacketOPCode(char buffer[MAXMESG]) {
+	unsigned short* bufferTempPointer = nullptr;
+	bufferTempPointer = reinterpret_cast<unsigned short *>(buffer);
+	unsigned short opNumb = ntohs(*bufferTempPointer);
+	return opNumb;
+}
+
+unsigned short tftp::GetBlockNumber(char buffer[MAXMESG]) {
+	unsigned short* bufferBPointer = nullptr;
+	bufferBPointer = reinterpret_cast<unsigned short *>(buffer + 2);
+	unsigned short bNumber = ntohs(*bufferBPointer);
+	return bNumber;
+}
+
+// help from: https://stackoverflow.com/questions/14871388/convert-from-unsigned-short-to-string-c/14871427
+std::string tftp::ConvertUnsignedShortToString(unsigned short number) {
+	std::string result = "";
+	std::stringstream ss;
+	ss << number;
+	result = ss.str();
+	return result;
+}
+
+std::string tftp::GetFileNameStr(char buffer[MAXMESG]) {
+	char* bufpoint = buffer + 2;
+	int fileNameLength = 0;
+	for (int i = 2; i < MAXMESG; i++) {
+		if (buffer[i] == NULL) {
+			break;
+		}
+		fileNameLength++;
+	}
+	char filename[fileNameLength];
+	bcopy(bufpoint, filename, fileNameLength);
+	std::string result = std::string(filename);
+	return result;
+}
+
+// This function struggles to actually work, caution!!!
+void tftp::GetFileNameCharPointer(char* filename, char buffer[MAXMESG]) {
+	char* bufpoint = buffer + 2;
+	int fileNameLength = 0;
+	for (int i = 2; i < MAXMESG; i++) {
+		if (buffer[i] == NULL) {
+			break;
+		}
+		fileNameLength++;
+	}
+	char tempFilename[fileNameLength];
+	bcopy(bufpoint, tempFilename, fileNameLength);
+	bcopy(tempFilename, filename, fileNameLength);
+	//filename = tempFilename;
+	//std::string result = std::string(filename);
+	//return filename;
+}
+
+std::string tftp::GetMode(char buffer[MAXMESG], std::string fileName) {
+	std::string result = "";
+	int modeCharLength = 0;
+	//std::cout<< "creating RRQ packet" <<std::endl;
+	char* bufpoint;
+	bufpoint = buffer + 2; // move pointer to file name
+	bufpoint += fileName.length() + 1; //move pointer and add null byte
+	//strcpy(bufpoint, "octet"); // add mode to buffer
+	for (int i = 2 + fileName.length() + 1; i < (MAXMESG - (2 + fileName.length() + 1)); i++) {
+		if (buffer[i] == NULL) {
+			break;
+		}
+		modeCharLength++;
+	}
+	char modeChar[modeCharLength];
+	bcopy(bufpoint, modeChar, modeCharLength);
+	result = std::string(modeChar);
+	return result;
+}
+
+// pass char[] by reference help from: https://stackoverflow.com/questions/12987760/passing-char-array-by-reference
+void tftp::GetDataContent(char buffer[MAXMESG], char (& dataArray)[MAXDATA]) {
+	for (int i = 4; i < MAXMESG; i++) {
+		if (buffer[i] == NULL) {
+			break;
+		}
+		dataArray[i - 4] = buffer[i];
+	}
 }
