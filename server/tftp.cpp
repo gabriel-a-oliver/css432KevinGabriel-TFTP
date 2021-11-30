@@ -378,6 +378,56 @@ void tftp::WriteToFile(char *fileName, char *dataBuffer) {
 	}
 }
 
+void tftp::CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]) {
+	std::cout<< "in CreateDataPacket()"<<std::endl;
+	//char buffer[MAXMESG];
+	bzero(fileBuffer, (MAXMESG));
+	char* bufpoint = fileBuffer;
+
+	std::cout<< "creating data packet" <<std::endl;
+
+	unsigned short opValue = DATA;
+	unsigned short* opCodePtr = (unsigned short *) fileBuffer;
+	*opCodePtr = htons(opValue);
+	std::cout<< "OP:";
+	std::cout << opValue <<std::endl;
+
+
+	opCodePtr++; // move pointer to block number
+	std::cout<< "Block#:";
+	unsigned short blockNumber = 1; // temporary for testing
+	*opCodePtr = htons(blockNumber);
+	std::cout << blockNumber <<std::endl;
+
+	bufpoint = fileBuffer + 4; // move pointer to file name
+	//FileData//////////////////////////////////////////////////////////////////
+	//open and reading Linux commands:
+	std::cout << "Get File Name:" << tftp::GetFileNameStr(buffer) <<std::endl;
+	int fd = open(const_cast<char*>(tftp::GetFileNameStr(buffer).c_str()), O_RDONLY); // open text file
+	std::cout<< "fd value:" << fd <<std::endl;
+	if (fd < 0) {
+		std::cout<< "linux open file error"<<std::endl;
+		// error opening fileName
+	} else {
+		std::cout<< "no issue opening file"<<std::endl;
+	}
+
+	//char data[MAXDATA];
+	//bzero(bufpoint, MAXDATA);
+	int n = read(fd, bufpoint, MAXDATA); // read up to MAXDATA bytes
+	if (n < 0) {
+		std::cout<< "read error:" << n <<std::endl;
+	} else {
+		std::cout << "read successful:" << n << std::endl;
+	}
+	// if result == 0: end of file; if result < 0: error
+
+	// create DATA packet and call sendto
+
+	close(fd); // once finish reading whole file, close text file
+	///////////////////////////////////////////////////////////////////////////
+}
+
 // return any packet as a string
 std::string tftp::PacketToString(char buffer[MAXMESG]) {
 	unsigned short opNumber = tftp::GetPacketOPCode(buffer);

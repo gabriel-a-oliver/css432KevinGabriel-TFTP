@@ -32,6 +32,7 @@ public:
 	static void BuildErrMessage(int blockNumber, char buffer[MAXMESG]);
 	static void BuildDataMessage(int blockNumber, char buffer[MAXMESG]);
 	static void WriteToFile(char *fileName, char *dataBuffer);
+    static void CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]);
 	static void PrintPacket(char buffer[MAXMESG]);
 	static std::string PacketToString(char buffer[MAXMESG]);
 	static unsigned short GetPacketOPCode(char buffer[MAXMESG]);
