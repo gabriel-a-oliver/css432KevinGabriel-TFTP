@@ -4,16 +4,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
-#include <errno.h>          // for retrieving the error number.
-#include <string.h>         // for strerror function.
-#include <signal.h>         // for the signal handler registration.
+#include <errno.h>
+#include <string.h>
+#include <signal.h>
 #include <unistd.h>
 #include "tftp.cpp"
 
-#define SERV_UDP_PORT   51709 // REPLACE WITH YOUR PORT NUMBER
+#define SERV_UDP_PORT 51709
 
 char *progname;
-
 
 void CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]) {
 	std::cout<< "in CreateDataPacket()"<<std::endl;
@@ -74,7 +73,6 @@ int main(int argc, char *argv[]) {
     }
     
     int sockfd;
-
 	struct sockaddr_in serv_addr;
 
 	progname=argv[0];
@@ -108,6 +106,7 @@ int main(int argc, char *argv[]) {
 			printf("%s: recvfrom error\n",progname);
 			exit(4);
 		}
+
 		std::cout << "received something" << std::endl;
 		tftp::PrintPacket(buffer);
 
@@ -119,10 +118,10 @@ int main(int argc, char *argv[]) {
 			char fileBuffer[MAXMESG];
 			bzero(fileBuffer, MAXMESG);
 			CreateDataPacket(buffer,fileBuffer);
+
 			tftp::PrintPacket(fileBuffer);
 
-
-			// Send the data packet to client /////////////////////////////////////////////////
+			// Send the data packet to client 
 			std::cout<< "sending data packet" <<std::endl;
 			int n = sendto(sockfd, fileBuffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
 			if (n < 0) {
@@ -131,13 +130,11 @@ int main(int argc, char *argv[]) {
 			} else {
 				std::cout<< "no issue sending packet" <<std::endl;
 			}
-			// ////////////////////////////////////////////////////////////////////////////////
 
-			// Wait to receive ACK from client /////////////////////////////////////////////////////////////////////////
+			// Wait to receive ACK from client 
 			std::cout<< "Waiting to receive ack from client"<<std::endl;
-			char ackBuffer[MAXMESG];
-			bzero(ackBuffer, MAXMESG);
-			n = recvfrom(sockfd, ackBuffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
+            bzero(buffer, sizeof(buffer));
+			n = recvfrom(sockfd, buffer, MAXMESG, 0, &pcli_addr, (socklen_t*)&clilen);
 			if (n < 0) {
 				printf("%s: recvfrom error\n",progname);
 				exit(4);
@@ -145,19 +142,17 @@ int main(int argc, char *argv[]) {
 			std::cout << "received something" << std::endl;
 
 			// check if received packet is the ack
-			tftp::PrintPacket(ackBuffer);
-			unsigned short ackOpNumb = tftp::GetPacketOPCode(ackBuffer);
+			tftp::PrintPacket(buffer);
+			unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
 			if (ackOpNumb == ACK) {
-				std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(ackBuffer) <<std::endl;
+				std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
 			} else {
 				std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 			}
+		} else if (opNumber == WRQ) {
+			std::cout<< "op is WRQ"<<std::endl;
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		} else
-        if (opNumber == WRQ) {
-			/*std::cout<< "op is WRQ"<<std::endl;
+            /*
             // if WRQ, send ACK0 and call tftp shared receiving function
             // BuildAckMessage()
             // sendto()
@@ -169,10 +164,6 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-
-
-
 
 // dg_echo(sockfd);
 
