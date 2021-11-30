@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 		*opCodePtr = htons(opValue);
 	} else
 	if (op[1] == 'w') {
-		std::cout<< "OP is w:" << WRQ <<std::endl;
+		std::cout<< "OP is w: " << WRQ <<std::endl;
 		unsigned short opValue = WRQ;
 		unsigned short* opCodePtr = (unsigned short *) buffer;
 		*opCodePtr = htons(opValue);
@@ -136,8 +136,27 @@ int main(int argc, char *argv[])
 			}
 		}
 	} else if (op[1] == 'w') {
-		// if WRQ, call tftp shared sending function (may need to receive ACK0 first)
-		tftp::SendMessage(sockfd, (struct sockaddr *) &cli_addr, (struct sockaddr *) &serv_addr, filename);
+        std::cout<< "waiting for ACK0 from server" <<std::endl;
+        tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
+
+		// check if received packet is the ack
+		tftp::PrintPacket(buffer);
+		unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
+		if (ackOpNumb == ACK) {
+			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
+		} else {
+			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+		}
+
+        std::cout<< "creating data packet" <<std::endl;
+		char fileBuffer[MAXMESG];
+		bzero(fileBuffer, MAXMESG);
+        
+        //
+        // change CreateDataPacket argument from buffer to filename
+        //
+		// tftp::CreateDataPacket(buffer,fileBuffer);
+
 	} else {
 		std::cout<< "was not RRQ or WRQ" <<std::endl;
 	}

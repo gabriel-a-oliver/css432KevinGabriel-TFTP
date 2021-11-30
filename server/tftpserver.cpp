@@ -101,11 +101,30 @@ int main(int argc, char *argv[]) {
 		} else if (opNumber == WRQ) {
 			std::cout<< "op is WRQ"<<std::endl;
 
-            /*
-            // if WRQ, send ACK0 and call tftp shared receiving function
-            // BuildAckMessage()
-            // sendto()
-            tftp::ReceiveMessage(sockfd, &pcli_addr, (struct sockaddr *) &serv_addr, filename);*/
+            std::cout<< "creating ack0 packet" <<std::endl;
+            char ackBuffer[MAXMESG];
+			bzero(ackBuffer, sizeof(ackBuffer));
+			char* ackBufPoint = ackBuffer + 2;
+
+			unsigned short ackOpValue = ACK;
+			unsigned short* ackOpCodePtr = (unsigned short *) ackBuffer;
+			*ackOpCodePtr = htons(ackOpValue);
+
+			unsigned short ackBlockValue = 0;
+			unsigned short* ackBlockPtr = (unsigned short *) ackBuffer + 1;
+			*ackBlockPtr = htons(ackBlockValue);
+
+			tftp::PrintPacket(ackBuffer);
+
+			std::cout<< "sending ack0 packet" <<std::endl;
+			int n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
+			if (n < 0) {
+				printf("%s: sendto error\n",progname);
+				exit(4);
+			} else {
+				std::cout<< "no issue sending packet" <<std::endl;
+			}
+
         } else {
 			std::cout<< "op was neither"<<std::endl;
 		}
