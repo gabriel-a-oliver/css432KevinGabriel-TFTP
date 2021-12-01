@@ -378,7 +378,7 @@ void tftp::WriteToFile(char *fileName, char *dataBuffer) {
 	}
 }
 
-void tftp::CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]) {
+void tftp::CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]) {
 	std::cout<< "in CreateDataPacket()"<<std::endl;
 	//char buffer[MAXMESG];
 	bzero(fileBuffer, (MAXMESG));
@@ -402,8 +402,8 @@ void tftp::CreateDataPacket(char buffer[MAXMESG], char fileBuffer[MAXMESG]) {
 	bufpoint = fileBuffer + 4; // move pointer to file name
 	//FileData//////////////////////////////////////////////////////////////////
 	//open and reading Linux commands:
-	std::cout << "Get File Name:" << tftp::GetFileNameStr(buffer) <<std::endl;
-	int fd = open(const_cast<char*>(tftp::GetFileNameStr(buffer).c_str()), O_RDONLY); // open text file
+	std::cout << "File Name:" << fileName <<std::endl;
+	int fd = open(const_cast<char*>(fileName.c_str()), O_RDONLY); // open text file
 	std::cout<< "fd value:" << fd <<std::endl;
 	if (fd < 0) {
 		std::cout<< "linux open file error"<<std::endl;

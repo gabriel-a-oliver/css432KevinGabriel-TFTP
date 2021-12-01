@@ -66,7 +66,10 @@ int main(int argc, char *argv[]) {
 			std::cout<< "op is RRQ" <<std::endl;
 			char fileBuffer[MAXMESG];
 			bzero(fileBuffer, MAXMESG);
-			tftp::CreateDataPacket(buffer,fileBuffer);
+
+            std::string fileName = tftp::GetFileNameStr(buffer);
+
+			tftp::CreateDataPacket(fileName,fileBuffer);
 
 			tftp::PrintPacket(fileBuffer);
 
@@ -101,6 +104,12 @@ int main(int argc, char *argv[]) {
 		} else if (opNumber == WRQ) {
 			std::cout<< "op is WRQ"<<std::endl;
 
+            // save file name before clearing buffer
+            std::string fileNameString = tftp::GetFileNameStr(buffer);
+
+            // clear out buffer for reuse
+	        bzero(buffer, sizeof(buffer));
+
             std::cout<< "creating ack0 packet" <<std::endl;
             char ackBuffer[MAXMESG];
 			bzero(ackBuffer, sizeof(ackBuffer));
@@ -125,6 +134,43 @@ int main(int argc, char *argv[]) {
 				std::cout<< "no issue sending packet" <<std::endl;
 			}
 
+            // receiving DATA from client
+		    tftp::ReceiveMessage(sockfd, (struct sockaddr *) &pcli_addr, (struct sockaddr *) &serv_addr, buffer);
+		    tftp::PrintPacket(buffer);
+
+		    char* fileContentBuffer = buffer + 4;
+            char* filename = &fileNameString[0];
+
+		    tftp::WriteToFile(filename, fileContentBuffer);
+
+		    // create ACK packet and send to server 
+		    unsigned short opNumb = tftp::GetPacketOPCode(buffer);
+		    if (opNumb == DATA) {
+			    std::cout<< "Received and written Data packet, creating corresponding ack packet"<<std::endl;
+
+			    std::cout<< "creating ack packet" <<std::endl;
+			    bzero(buffer, sizeof(buffer));
+			    char* ackBufPoint = buffer + 2;
+
+			    unsigned short ackOpValue = ACK;
+			    unsigned short* ackOpCodePtr = (unsigned short *) buffer;
+			    *ackOpCodePtr = htons(ackOpValue);
+
+			    unsigned short ackBlockValue = 1; // temporary value for testing
+			    unsigned short* ackBlockPtr = (unsigned short *) buffer + 1;
+			    *ackBlockPtr = htons(ackBlockValue);
+
+			    tftp::PrintPacket(buffer);
+
+			    std::cout<< "sending packet" <<std::endl;
+			    int n = sendto(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
+			    if (n < 0) {
+				    printf("%s: sendto error\n",progname);
+				    exit(4);
+			    } else {
+				    std::cout<< "no issue sending packet" <<std::endl;
+			    }
+            }
         } else {
 			std::cout<< "op was neither"<<std::endl;
 		}

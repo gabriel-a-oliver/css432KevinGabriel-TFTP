@@ -95,6 +95,9 @@ int main(int argc, char *argv[])
 		std::cout<< "no issue sending packet" <<std::endl;
 	}
 
+    // save file name before clearing buffer
+    std::string fileNameString = tftp::GetFileNameStr(buffer);
+
     // clear out buffer for reuse
 	bzero(buffer, sizeof(buffer));
 
@@ -152,10 +155,33 @@ int main(int argc, char *argv[])
 		char fileBuffer[MAXMESG];
 		bzero(fileBuffer, MAXMESG);
         
-        //
-        // change CreateDataPacket argument from buffer to filename
-        //
-		// tftp::CreateDataPacket(buffer,fileBuffer);
+        tftp::CreateDataPacket(fileNameString,fileBuffer);
+
+		tftp::PrintPacket(fileBuffer);
+
+		// Send the data packet to client 
+		std::cout<< "sending data packet" <<std::endl;
+		int n = sendto(sockfd, fileBuffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+		if (n < 0) {
+			printf("%s: sendto error\n",progname);
+			exit(4);
+		} else {
+			std::cout<< "no issue sending packet" <<std::endl;
+		}
+
+        // waiting for ACK from server
+        std::cout<< "waiting for ACK from server" <<std::endl;
+        bzero(buffer, sizeof(buffer));
+        tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
+
+		// check if received packet is the ack
+		tftp::PrintPacket(buffer);
+		ackOpNumb = tftp::GetPacketOPCode(buffer);
+		if (ackOpNumb == ACK) {
+			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
+		} else {
+			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+		}
 
 	} else {
 		std::cout<< "was not RRQ or WRQ" <<std::endl;
