@@ -407,6 +407,8 @@ void tftp::CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]) {
 	std::cout<< "fd value:" << fd <<std::endl;
 	if (fd < 0) {
 		std::cout<< "linux open file error"<<std::endl;
+		std::cout << "in the future, send an ERROR packet. but for now, just end program" << std::endl;
+		exit(7);
 		// error opening fileName
 	} else {
 		std::cout<< "no issue opening file"<<std::endl;
@@ -537,7 +539,9 @@ std::string tftp::GetFileNameStr(char buffer[MAXMESG]) {
 	char* bufpoint = buffer + 2;
 	int fileNameLength = 0;
 	for (int i = 2; i < MAXMESG; i++) {
+		std::cout << buffer[i];
 		if (buffer[i] == NULL) {
+			std::cout<< "null found in getting file name"<<std::endl;
 			break;
 		}
 		fileNameLength++;
@@ -594,4 +598,33 @@ void tftp::GetDataContent(char buffer[MAXMESG], char (& dataArray)[MAXDATA]) {
 		}
 		dataArray[i - 4] = buffer[i];
 	}
+}
+
+int tftp::GetNumberOfRequeiredPackets(std::string filename) {
+	std::ifstream file( filename, std::ios::binary | std::ios::ate);
+	int fileSize = file.tellg();
+	std::cout<< "File size:" << fileSize << " Bytes" <<std::endl;
+
+	if (fileSize < MAXDATA) {
+		std::cout<< "only need one packet to send all of the data"<<std::endl;
+		return 1;
+	}
+	int numberOfPackets = (fileSize / MAXDATA) + 1;
+	std::cout<< "file requires: " <<numberOfPackets << " number of packets"<<std::endl;
+	return numberOfPackets;
+}
+
+bool tftp::CheckIfLastDataPacket(char buffer[MAXMESG]) {
+	bool result = false;
+	int dataLength = 0;
+	for (int i = 4; i < MAXMESG; i++) {
+		if (buffer[i] == NULL) {
+			break;
+		}
+		dataLength++;
+	}
+	if (dataLength < MAXDATA) {
+		result = true;
+	}
+	return result;
 }

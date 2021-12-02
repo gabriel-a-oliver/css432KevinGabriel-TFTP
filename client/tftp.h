@@ -42,6 +42,8 @@ public:
 	static void GetFileNameCharPointer(char* filename, char buffer[MAXMESG]);
 	static std::string GetMode(char buffer[MAXMESG], std::string fileName);
 	static void GetDataContent(char buffer[MAXMESG], char (& dataArray)[MAXDATA]);
+	static int GetNumberOfRequeiredPackets(std::string filename);
+	static bool CheckIfLastDataPacket(char buffer[MAXMESG]);
 private:
 	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
 	static void ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr, char mesg[MAXMESG]);

@@ -77,12 +77,26 @@ int main(int argc, char *argv[])
 		std::cout<< "neither r or w" <<std::endl;
 	}
 
+	/*std::cout<< "printing file name of length:" << strlen(filename)<<std::endl;
+	for (int i = 0; i < strlen(filename); i++) {
+		if (filename[i] == NULL) {
+			std::cout << "~";
+		}
+		std::cout<< filename[i];
+	}
+	std::cout<<std::endl << "end of file name" << std::endl;*/
+
 	std::cout<< "creating RRQ/WRQ request packet" <<std::endl;
 	bufpoint = buffer + 2; // move pointer to file name
 	strcpy(bufpoint, filename); // add file name to buffer
 	bufpoint += strlen(filename) + 1; //move pointer and add null byte
-	strcpy(bufpoint, "octet"); // add mode to buffer
-	bufpoint += strlen("octet") + 1; // move pointer and add null byte
+	char modePointer[5] = {'o','c','t','e','t'};
+	strcpy(bufpoint, modePointer); // add mode to buffer
+	bufpoint += strlen(modePointer) + 1; // move pointer and add null byte
+
+	/*std::cout<< "Printing fileName:" <<tftp::GetFileNameStr(buffer)<<std::endl;
+	std::cout << "Printing mode:" << tftp::GetMode(buffer, tftp::GetFileNameStr(buffer))<<std::endl;*/
+
 
 	tftp::PrintPacket(buffer);
 
@@ -95,8 +109,10 @@ int main(int argc, char *argv[])
 		std::cout<< "no issue sending packet" <<std::endl;
 	}
 
+	std::cout<< "Saving file name:";
     // save file name before clearing buffer
     std::string fileNameString = tftp::GetFileNameStr(buffer);
+	std::cout<< fileNameString <<std::endl;
 
     // clear out buffer for reuse
 	bzero(buffer, sizeof(buffer));
@@ -109,10 +125,19 @@ int main(int argc, char *argv[])
 		char* fileContentBuffer = buffer + 4;
 
 		tftp::WriteToFile(filename, fileContentBuffer);
-
-		// create ACK packet and send to server 
+		
+		// create ACK packet and send to server
 		unsigned short opNumb = tftp::GetPacketOPCode(buffer);
 		if (opNumb == DATA) {
+
+			// checking if data packet is the last one
+			if (tftp::CheckIfLastDataPacket(buffer)) {
+				std::cout<< "Last data packet!"<<std::endl;
+			} else {
+				std::cout<< "not last data packet, expect more!"<<std::endl;
+			}
+
+
 			std::cout<< "Received and written Data packet, creating corresponding ack packet"<<std::endl;
 
 			std::cout<< "creating ack packet" <<std::endl;
@@ -138,6 +163,7 @@ int main(int argc, char *argv[])
 				std::cout<< "no issue sending packet" <<std::endl;
 			}
 		}
+
 	} else if (op[1] == 'w') {
         std::cout<< "waiting for ACK0 from server" <<std::endl;
         tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
@@ -151,6 +177,8 @@ int main(int argc, char *argv[])
 			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 		}
 
+		int numberOfRequiredPackets = tftp::GetNumberOfRequeiredPackets(fileNameString);
+		std::cout<< "need " << numberOfRequiredPackets << " packets to send all the data"<<std::endl;
         std::cout<< "creating data packet" <<std::endl;
 		char fileBuffer[MAXMESG];
 		bzero(fileBuffer, MAXMESG);

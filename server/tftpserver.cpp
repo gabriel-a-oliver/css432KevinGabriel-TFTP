@@ -69,7 +69,10 @@ int main(int argc, char *argv[]) {
 
             std::string fileName = tftp::GetFileNameStr(buffer);
 
-			tftp::CreateDataPacket(fileName,fileBuffer);
+			int numberOfRequiredPackets = tftp::GetNumberOfRequeiredPackets(fileName);
+			std::cout<< "need " << numberOfRequiredPackets << " packets to send all the data"<<std::endl;
+
+			tftp::CreateDataPacket(fileName, fileBuffer);
 
 			tftp::PrintPacket(fileBuffer);
 
@@ -146,6 +149,14 @@ int main(int argc, char *argv[]) {
 		    // create ACK packet and send to server 
 		    unsigned short opNumb = tftp::GetPacketOPCode(buffer);
 		    if (opNumb == DATA) {
+
+				// checking if data packet is the last one
+				if (tftp::CheckIfLastDataPacket(buffer)) {
+					std::cout<< "Last data packet!"<<std::endl;
+				} else {
+					std::cout<< "not last data packet, expect more!"<<std::endl;
+				}
+
 			    std::cout<< "Received and written Data packet, creating corresponding ack packet"<<std::endl;
 
 			    std::cout<< "creating ack packet" <<std::endl;
