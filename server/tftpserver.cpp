@@ -64,13 +64,13 @@ int main(int argc, char *argv[]) {
 		std::cout << "checking if op is RRQ or WRQ" << std::endl;
         if (opNumber == RRQ) {
 			std::cout<< "op is RRQ" <<std::endl;
-			char fileBuffer[MAXMESG];
-			bzero(fileBuffer, MAXMESG);
+			/*char fileBuffer[MAXMESG];
+			bzero(fileBuffer, MAXMESG);*/
 
-            std::string fileName = tftp::GetFileNameStr(buffer);
+			std::string fileName = tftp::GetFileNameStr(buffer);
 
             //call tftp SendFile to send DATA
-			tftp::SendFile(progname, sockfd, pcli_addr, clilen, buffer, fileBuffer, fileName);
+			tftp::SendFile(progname, sockfd, pcli_addr, clilen, buffer, /*fileBuffer,*/ fileName);
 
 		} else if (opNumber == WRQ) {
 			std::cout<< "op is WRQ"<<std::endl;

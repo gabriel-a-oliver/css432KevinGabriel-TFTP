@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <cassert>
 #include <sstream>
+#include <stdio.h>
 
 // to be moved to shared tftp file
 #define RRQ	1
@@ -28,71 +29,79 @@
 
 #include "tftp.h"
 
-void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_addr, int clilen, char buffer[MAXMESG], char fileBuffer[MAXMESG], std::string fileName) {
-    int numberOfRequiredPackets = GetNumberOfRequeiredPackets(fileName);
-	std::cout<< "need " << numberOfRequiredPackets << " packets to send all the data"<<std::endl;
+void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_addr, int clilen, char buffer[MAXMESG], /*char fileBuffer[MAXMESG],*/ std::string fileName) {
+    std::cout<< "In tftp::SendFile()"<<std::endl;
+	int numberOfRequiredPackets = GetNumberOfRequeiredPackets(fileName);
+	char packetsList[numberOfRequiredPackets][MAXMESG];
+	for (int i = 0; i < numberOfRequiredPackets; i++) {
+		bzero(packetsList[i], MAXMESG);
+	}
 
-	CreateDataPacket(fileName, fileBuffer);
-
-	PrintPacket(fileBuffer);
-
-	// Send the data packet
-	std::cout<< "sending data packet" <<std::endl;
-	int n = sendto(sockfd, fileBuffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
-	if (n < 0) {
-		printf("%s: sendto error\n",progname);
-		exit(4);
+	// open file
+	std::cout << "File Name:" << fileName <<std::endl;
+	FILE * pFile;
+	pFile = fopen(const_cast<char*>(fileName.c_str()), "r"); // open text file
+	if (pFile == nullptr) {
+		std::cout<< "linux open file error"<<std::endl;
+		std::cout << "in the future, send an ERROR packet. but for now, just end program" << std::endl;
+		exit(7);
+		// error opening fileName
 	} else {
-		std::cout<< "no issue sending packet" <<std::endl;
+		std::cout<< "no issue opening file"<<std::endl;
+	}
+	// create data packets
+	int fileStartIterator = 0;
+	std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
+	for (int i = 0; i < numberOfRequiredPackets; i++) {
+		// create and initialize buffer
+		// fill buffer with up to MAXDATA amount of bytes
+		// store buffer i packetsList[i]
+		CreateDataPacket(pFile, packetsList[i], fileStartIterator);
+		std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
+		PrintPacket(packetsList[i]);
+	}
+	// close file
+	fclose(pFile); // once finish reading whole file, close text file
+	std::cout<< "closed file"<<std::endl;
+
+
+	for (int i = 0; i < numberOfRequiredPackets; i++) {
+		// Send the data packet
+		std::cout<< "sending data packet" <<std::endl;
+		int n = sendto(sockfd, packetsList[i], MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+		if (n < 0) {
+			printf("%s: sendto error\n",progname);
+			exit(4);
+		} else {
+			std::cout<< "no issue sending packet" <<std::endl;
+		}
+
+		// Wait to receive ACK from
+		std::cout<< "Waiting to receive ack from client"<<std::endl;
+		bzero(buffer, sizeof(buffer));
+		n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, (socklen_t*)&clilen);
+		if (n < 0) {
+			printf("%s: recvfrom error\n",progname);
+			exit(4);
+		}
+		std::cout << "received something" << std::endl;
+
+		// check if received packet is the ack
+		PrintPacket(buffer);
+		unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
+		if (ackOpNumb == ACK) {
+			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
+		} else {
+			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+		}
 	}
 
-	// Wait to receive ACK from
-	std::cout<< "Waiting to receive ack from client"<<std::endl;
-    bzero(buffer, sizeof(buffer));
-	n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, (socklen_t*)&clilen);
-	if (n < 0) {
-		printf("%s: recvfrom error\n",progname);
-		exit(4);
-	}
-	std::cout << "received something" << std::endl;
-
-	// check if received packet is the ack
-	PrintPacket(buffer);
-	unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
-	if (ackOpNumb == ACK) {
-		std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
-	} else {
-		std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
-	}
 }
 
 // This function is called if the server gets an RRQ
 // or of the client sends an WRQ
 void tftp::SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName) {
 	std::cout<< "in tftp::SendMessage"<<std::endl;
-	/* General idea:
-	 * receive the socket, the origin address, the recipient's address, and the name of the file to send
-	 *
-	 * in a loop: can ignore loop implementation for now, just need to send one packet
-	 *
-	 *
-	 * 		create a new packet
-	 * 		stream the OP type Data to the packet (2 bytes)
-	 * 		stream the block number for this package into the packet (2 bytes)
-	 * 		stream data from the file to a DATA packet (up to 512 number of bytes)
-	 *
-	 *		send packet
-	 *		wait for ack
-	 *		check it is an ack
-	 *			if so, manage acks // for only one packet, the process has completed
-	 *			else, if its an error, resend packet
-	 *				else, more ACKs management needed
-	 *
-	 * */
-
-
-
-
 
 	int m; // for debugging
 	m = SendMessageHelper(sockfd, receiving_addr, fileName);
@@ -465,7 +474,7 @@ void tftp::WriteToFile(char *fileName, char *dataBuffer) {
 	}
 }
 
-void tftp::CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]) {
+void tftp::CreateDataPacket(FILE* pFile, char fileBuffer[MAXMESG], int& fileStartIterator) {
 	std::cout<< "in CreateDataPacket()"<<std::endl;
 	//char buffer[MAXMESG];
 	bzero(fileBuffer, (MAXMESG));
@@ -489,7 +498,7 @@ void tftp::CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]) {
 	bufpoint = fileBuffer + 4; // move pointer to file name
 	//FileData//////////////////////////////////////////////////////////////////
 	//open and reading Linux commands:
-	std::cout << "File Name:" << fileName <<std::endl;
+	/*std::cout << "File Name:" << fileName <<std::endl;
 	int fd = open(const_cast<char*>(fileName.c_str()), O_RDONLY); // open text file
 	std::cout<< "fd value:" << fd <<std::endl;
 	if (fd < 0) {
@@ -499,11 +508,15 @@ void tftp::CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]) {
 		// error opening fileName
 	} else {
 		std::cout<< "no issue opening file"<<std::endl;
-	}
+	}*/
 
 	//char data[MAXDATA];
 	//bzero(bufpoint, MAXDATA);
-	int n = read(fd, bufpoint, MAXDATA); // read up to MAXDATA bytes
+
+	// I get a segmentation fault when ere are multiple packets. that's because we cannot do a pFile + int
+	int n = fread(bufpoint, 1, MAXDATA, pFile + fileStartIterator);
+	fileStartIterator += n;
+	//int n = read(fd, bufpoint, MAXDATA); // read up to MAXDATA bytes
 	if (n < 0) {
 		std::cout<< "read error:" << n <<std::endl;
 	} else {
@@ -513,7 +526,7 @@ void tftp::CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]) {
 
 	// create DATA packet and call sendto
 
-	close(fd); // once finish reading whole file, close text file
+	//close(fd); // once finish reading whole file, close text file
 	///////////////////////////////////////////////////////////////////////////
 }
 

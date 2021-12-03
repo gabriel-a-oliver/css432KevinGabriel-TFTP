@@ -133,10 +133,10 @@ int main(int argc, char *argv[])
 			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 		}
 
-        char fileBuffer[MAXMESG];
-		bzero(fileBuffer, MAXMESG);
+        /*char fileBuffer[MAXMESG];
+		bzero(fileBuffer, MAXMESG);*/
 
-        tftp::SendFile(progname, sockfd, serv_addr, sizeof(struct sockaddr_in), buffer, fileBuffer, fileNameString);
+        tftp::SendFile(progname, sockfd, serv_addr, sizeof(struct sockaddr_in), buffer, /*fileBuffer,*/ fileNameString);
 		
 	} else {
 		std::cout<< "was not RRQ or WRQ" <<std::endl;

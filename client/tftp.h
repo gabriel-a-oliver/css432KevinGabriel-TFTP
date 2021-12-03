@@ -26,7 +26,7 @@ class tftp {
 #define ERROR 5
 
 public:
-	static void SendFile(char *progname, int sockfd, struct sockaddr_in pcli_addr, int clilen, char buffer[MAXMESG], char fileBuffer[MAXMESG], std::string fileName);
+	static void SendFile(char *progname, int sockfd, struct sockaddr_in pcli_addr, int clilen, char buffer[MAXMESG], /*char fileBuffer[MAXMESG],*/ std::string fileName);
     static void SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName);
     static void ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, struct sockaddr_in receiving_addr, char buffer[MAXMESG], std::string fileNameString);
 	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char buffer[MAXMESG]);
@@ -34,7 +34,7 @@ public:
 	static void BuildErrMessage(int blockNumber, char buffer[MAXMESG]);
 	static void BuildDataMessage(int blockNumber, char buffer[MAXMESG]);
 	static void WriteToFile(char *fileName, char *dataBuffer);
-    static void CreateDataPacket(std::string fileName, char fileBuffer[MAXMESG]);
+    static void CreateDataPacket(FILE *pFile, char fileBuffer[MAXMESG], int& fileStartIterator);
 	static void PrintPacket(char buffer[MAXMESG]);
 	static std::string PacketToString(char buffer[MAXMESG]);
 	static unsigned short GetPacketOPCode(char buffer[MAXMESG]);
