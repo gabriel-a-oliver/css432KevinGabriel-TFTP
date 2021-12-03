@@ -119,51 +119,7 @@ int main(int argc, char *argv[])
 
 	if (op[1] == 'r') {
 		// if RRQ, call tftp shared receiving function
-		tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
-		tftp::PrintPacket(buffer);
-
-		char* fileContentBuffer = buffer + 4;
-
-		tftp::WriteToFile(filename, fileContentBuffer);
-		
-		// create ACK packet and send to server
-		unsigned short opNumb = tftp::GetPacketOPCode(buffer);
-		if (opNumb == DATA) {
-
-			// checking if data packet is the last one
-			if (tftp::CheckIfLastDataPacket(buffer)) {
-				std::cout<< "Last data packet!"<<std::endl;
-			} else {
-				std::cout<< "not last data packet, expect more!"<<std::endl;
-			}
-
-
-			std::cout<< "Received and written Data packet, creating corresponding ack packet"<<std::endl;
-
-			std::cout<< "creating ack packet" <<std::endl;
-			bzero(buffer, sizeof(buffer));
-			char* ackBufPoint = buffer + 2;
-
-			unsigned short ackOpValue = ACK;
-			unsigned short* ackOpCodePtr = (unsigned short *) buffer;
-			*ackOpCodePtr = htons(ackOpValue);
-
-			unsigned short ackBlockValue = 1; // temporary value for testing
-			unsigned short* ackBlockPtr = (unsigned short *) buffer + 1;
-			*ackBlockPtr = htons(ackBlockValue);
-
-			tftp::PrintPacket(buffer);
-
-			std::cout<< "sending packet" <<std::endl;
-			int n = sendto(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-			if (n < 0) {
-				printf("%s: sendto error\n",progname);
-				exit(4);
-			} else {
-				std::cout<< "no issue sending packet" <<std::endl;
-			}
-		}
-
+		tftp::ReceiveFile(progname, sockfd, serv_addr, cli_addr, buffer,  fileNameString);
 	} else if (op[1] == 'w') {
         std::cout<< "waiting for ACK0 from server" <<std::endl;
         tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
@@ -177,40 +133,11 @@ int main(int argc, char *argv[])
 			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 		}
 
-		int numberOfRequiredPackets = tftp::GetNumberOfRequeiredPackets(fileNameString);
-		std::cout<< "need " << numberOfRequiredPackets << " packets to send all the data"<<std::endl;
-        std::cout<< "creating data packet" <<std::endl;
-		char fileBuffer[MAXMESG];
+        char fileBuffer[MAXMESG];
 		bzero(fileBuffer, MAXMESG);
-        
-        tftp::CreateDataPacket(fileNameString,fileBuffer);
 
-		tftp::PrintPacket(fileBuffer);
-
-		// Send the data packet to client 
-		std::cout<< "sending data packet" <<std::endl;
-		int n = sendto(sockfd, fileBuffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-		if (n < 0) {
-			printf("%s: sendto error\n",progname);
-			exit(4);
-		} else {
-			std::cout<< "no issue sending packet" <<std::endl;
-		}
-
-        // waiting for ACK from server
-        std::cout<< "waiting for ACK from server" <<std::endl;
-        bzero(buffer, sizeof(buffer));
-        tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
-
-		// check if received packet is the ack
-		tftp::PrintPacket(buffer);
-		ackOpNumb = tftp::GetPacketOPCode(buffer);
-		if (ackOpNumb == ACK) {
-			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
-		} else {
-			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
-		}
-
+        tftp::SendFile(progname, sockfd, serv_addr, sizeof(struct sockaddr_in), buffer, fileBuffer, fileNameString);
+		
 	} else {
 		std::cout<< "was not RRQ or WRQ" <<std::endl;
 	}
