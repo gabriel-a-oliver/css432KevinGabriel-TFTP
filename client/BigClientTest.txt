@@ -1,0 +1,18 @@
+Hello
+I am BigClientTest.txt
+I require multiple packets, because I am larger than 512 Bytes.
+In fact, I am exactly 550 Bytes and will require 2 packets to send of this data.
+582 Bytes is a lot more words than I anticipated. So I will fill up this file with spam.
+LALALALALALA
+LEDULLEDULLEDULLEDUL
+LOOOOOOOOOOOOOOO
+Amogsus
+Did you know that when you shift down
+like this
+another byte is allocated as an end-line flag
+~~the more you knoooowwww~~
+are we at 550 Bytes yet?
+no?
+darn, still 51 more to go
+123456789012345678901234567890123456789
+finished :)
