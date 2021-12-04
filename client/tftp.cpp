@@ -29,6 +29,20 @@
 
 #include "tftp.h"
 
+
+
+/*
+// timeout implementation
+#define TIMEOUT_TIME 3
+void sig_handler(int signum){
+    printf("Inside timeout handler function\n");
+    // retransmit packet here?
+    alarm(TIMEOUT_TIME); // Schedule a new alarm
+}
+*/
+
+
+
 void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_addr, int clilen, char buffer[MAXMESG], /*char fileBuffer[MAXMESG],*/ std::string fileName) {
 	std::cout<< "In tftp::SendFile()"<<std::endl;
 	int numberOfRequiredPackets = GetNumberOfRequeiredPackets(fileName);
@@ -115,6 +129,18 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		} else {
 			std::cout<< "no issue sending packet" <<std::endl;
 		}
+
+
+
+        /*
+        // timeout implementation
+        int timeoutCount = 0;
+        signal(SIGALRM,sig_handler); // Register signal handler
+        alarm(TIMEOUT_TIME); // set timer
+        alarm(0); // turn off alarm
+        */
+
+        
 
 		// Wait to receive ACK from
 		std::cout<< "Waiting to receive ack from client"<<std::endl;
