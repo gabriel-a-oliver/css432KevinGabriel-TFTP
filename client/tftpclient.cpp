@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 		tftp::ReceiveFile(progname, sockfd, serv_addr, fileNameString);
 	} else if (op[1] == 'w') {
         std::cout<< "waiting for ACK0 from server" <<std::endl;
-        tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
+        tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, buffer);
 
 		// check if received packet is the ack
 		tftp::PrintPacket(buffer);
@@ -145,26 +145,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

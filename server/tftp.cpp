@@ -286,15 +286,13 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 
 // This function is called if the server receives a WRQ
 // or if the client sends an RRQ
-void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char buffer[MAXMESG]) {
+void tftp::ReceiveMessage(int sockfd, struct sockaddr* sending_addr, char buffer[MAXMESG]) {
 	std::cout<< "tftp::ReceiveMessage()"<<std::endl;
-
 
 	int n, m, clilen;
 	//char buffer[MAXMESG];
 	bzero(buffer, (MAXMESG));
 	clilen = sizeof(struct sockaddr);
-
 
 	// Receive Something
 	ReceivePacketHelper(sockfd, sending_addr, buffer);

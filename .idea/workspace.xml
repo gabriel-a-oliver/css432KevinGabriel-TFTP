@@ -20,11 +20,8 @@
       <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftpclient.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftpclient.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/clion-log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/clion-log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/Testing/Temporary/LastTest.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/tftpserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftpserver.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,11 +76,6 @@
     <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
       </method>
     </configuration>
     <configuration name="css432KevinGabriel" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="css432KevinGabriel" TARGET_NAME="css432KevinGabriel" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="css432KevinGabriel" RUN_TARGET_NAME="css432KevinGabriel">

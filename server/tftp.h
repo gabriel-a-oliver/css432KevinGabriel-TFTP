@@ -29,7 +29,7 @@ public:
 	static void SendFile(char *progname, int sockfd, struct sockaddr_in pcli_addr, int clilen, char buffer[MAXMESG], /*char fileBuffer[MAXMESG],*/ std::string fileName);
     static void SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName);
     static void ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, std::string fileNameString);
-	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char buffer[MAXMESG]);
+	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, char buffer[MAXMESG]);
 	static void WriteToFile(std::ofstream writeFile, char *dataBuffer);
     static void CreateDataPacket(FILE *pFile, char fileBuffer[MAXMESG], int& fileStartIterator);
 	static void PrintPacket(char buffer[MAXMESG]);
