@@ -28,12 +28,9 @@ class tftp {
 public:
 	static void SendFile(char *progname, int sockfd, struct sockaddr_in pcli_addr, int clilen, char buffer[MAXMESG], /*char fileBuffer[MAXMESG],*/ std::string fileName);
     static void SendMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char* fileName);
-    static void ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, struct sockaddr_in receiving_addr, char buffer[MAXMESG], std::string fileNameString);
+    static void ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, std::string fileNameString);
 	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, struct sockaddr* receiving_addr, char buffer[MAXMESG]);
-	static void BuildAckMessage(int blockNumber, char buffer[MAXMESG]);
-	static void BuildErrMessage(int blockNumber, char buffer[MAXMESG]);
-	static void BuildDataMessage(int blockNumber, char buffer[MAXMESG]);
-	static void WriteToFile(char *fileName, char *dataBuffer);
+	static void WriteToFile(std::ofstream writeFile, char *dataBuffer);
     static void CreateDataPacket(FILE *pFile, char fileBuffer[MAXMESG], int& fileStartIterator);
 	static void PrintPacket(char buffer[MAXMESG]);
 	static std::string PacketToString(char buffer[MAXMESG]);
@@ -46,8 +43,9 @@ public:
 	static void GetDataContent(char buffer[MAXMESG], char (& dataArray)[MAXDATA]);
 	static int GetNumberOfRequeiredPackets(std::string filename);
 	static bool CheckIfLastDataPacket(char buffer[MAXMESG]);
+	static void CreateAckPacket(char buffer[MAXMESG], unsigned short blockNumber);
 private:
-	static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
+	//static int SendMessageHelper(int sockfd, struct sockaddr* receiving_addr, char* fileName);
 	static void ReceivePacketHelper(int sockfd, struct sockaddr* sending_addr, char mesg[MAXMESG]);
 	static char** GetFileData(char* fileName);
 

@@ -97,7 +97,6 @@ int main(int argc, char *argv[])
 	/*std::cout<< "Printing fileName:" <<tftp::GetFileNameStr(buffer)<<std::endl;
 	std::cout << "Printing mode:" << tftp::GetMode(buffer, tftp::GetFileNameStr(buffer))<<std::endl;*/
 
-
 	tftp::PrintPacket(buffer);
 
 	std::cout<< "sending packet" <<std::endl;
@@ -119,7 +118,7 @@ int main(int argc, char *argv[])
 
 	if (op[1] == 'r') {
 		// if RRQ, call tftp shared receiving function
-		tftp::ReceiveFile(progname, sockfd, serv_addr, cli_addr, buffer,  fileNameString);
+		tftp::ReceiveFile(progname, sockfd, serv_addr, fileNameString);
 	} else if (op[1] == 'w') {
         std::cout<< "waiting for ACK0 from server" <<std::endl;
         tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, (struct sockaddr *) &cli_addr, buffer);
