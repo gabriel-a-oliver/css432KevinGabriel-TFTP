@@ -31,7 +31,7 @@ public:
     static void ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, std::string fileNameString);
 	static void ReceiveMessage(int sockfd, struct sockaddr* sending_addr, char buffer[MAXMESG]);
 	static void WriteToFile(std::ofstream writeFile, char *dataBuffer);
-    static void CreateDataPacket(FILE *pFile, char fileBuffer[MAXMESG], int& fileStartIterator);
+    static void CreateDataPacket(std::fstream readFile, char fileBuffer[MAXMESG], int& fileStartIterator);
 	static void PrintPacket(char buffer[MAXMESG]);
 	static std::string PacketToString(char buffer[MAXMESG]);
 	static unsigned short GetPacketOPCode(char buffer[MAXMESG]);

@@ -39,17 +39,20 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 
 	// open file
 	std::cout << "File Name:" << fileName <<std::endl;
-	FILE * pFile;
-	//std::ifstream
-	pFile = fopen(const_cast<char*>(fileName.c_str()), "r"); // open text file
-	if (pFile == nullptr) {
-		std::cout<< "linux open file error"<<std::endl;
-		std::cout << "in the future, send an ERROR packet. but for now, just end program" << std::endl;
-		exit(7);
-		// error opening fileName
+
+	std::ifstream infile(fileName);
+	if (infile.good()){
+		std::cout<< "file exists" <<std::endl;
+		// help from: https://stackoverflow.com/questions/17032970/clear-data-inside-text-file-in-c
 	} else {
-		std::cout<< "no issue opening file"<<std::endl;
+		std::cout<< "file does not exist, send error back"<<std::endl;
+		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
+
+		exit(99); // temporary, should just be sending back error instead of exiting
 	}
+
+	std::fstream readFile (fileName);
+
 	// create data packets
 	int fileStartIterator = 0;
 	std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
@@ -57,12 +60,48 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		// create and initialize buffer
 		// fill buffer with up to MAXDATA amount of bytes
 		// store buffer i packetsList[i]
-		CreateDataPacket(pFile, packetsList[i], fileStartIterator);
+		//CreateDataPacket(readFile, packetsList[i], fileStartIterator);
+
+
+
+		bzero(packetsList[i], (MAXMESG));
+		char* bufpoint = packetsList[i];
+
+		std::cout<< "creating data packet" <<std::endl;
+
+		unsigned short opValue = DATA;
+		unsigned short* opCodePtr = (unsigned short *) packetsList[i];
+		*opCodePtr = htons(opValue);
+		std::cout<< "OP:";
+		std::cout << opValue <<std::endl;
+
+
+		opCodePtr++; // move pointer to block number
+		std::cout<< "Block#:";
+		unsigned short blockNumber = 1; // temporary for testing
+		*opCodePtr = htons(blockNumber);
+		std::cout << blockNumber <<std::endl;
+
+		bufpoint = packetsList[i] + 4; // move pointer to file name
+
+
+		int n = readFile.readsome(bufpoint, MAXDATA);
+		fileStartIterator += n;
+		//int n = read(fd, bufpoint, MAXDATA); // read up to MAXDATA bytes
+		if (n < 0) {
+			std::cout<< "read error:" << n <<std::endl;
+		} else {
+			std::cout << "read successful:" << n << std::endl;
+		}
+
+
+
+
 		std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
 		PrintPacket(packetsList[i]);
 	}
 	// close file
-	fclose(pFile); // once finish reading whole file, close text file
+	readFile.close(); // once finish reading whole file, close text file
 	std::cout<< "closed file"<<std::endl;
 
 
@@ -518,7 +557,7 @@ void tftp::WriteToFile(std::ofstream writeFile, char *dataBuffer) {
 	}*/
 }
 
-void tftp::CreateDataPacket(FILE* pFile, char fileBuffer[MAXMESG], int& fileStartIterator) {
+void tftp::CreateDataPacket(std::fstream readFile, char fileBuffer[MAXMESG], int& fileStartIterator) {
 	std::cout<< "in CreateDataPacket()"<<std::endl;
 	//char buffer[MAXMESG];
 	bzero(fileBuffer, (MAXMESG));
@@ -558,7 +597,8 @@ void tftp::CreateDataPacket(FILE* pFile, char fileBuffer[MAXMESG], int& fileStar
 	//bzero(bufpoint, MAXDATA);
 
 	// I get a segmentation fault when ere are multiple packets. that's because we cannot do a pFile + int
-	int n = fread(bufpoint, 1, MAXDATA, pFile + fileStartIterator);
+	//int n = fread(bufpoint, 1, MAXDATA, pFile + fileStartIterator);
+	int n = readFile.readsome(fileBuffer, MAXMESG);
 	fileStartIterator += n;
 	//int n = read(fd, bufpoint, MAXDATA); // read up to MAXDATA bytes
 	if (n < 0) {
