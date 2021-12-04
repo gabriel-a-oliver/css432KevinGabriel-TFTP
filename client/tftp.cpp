@@ -78,7 +78,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 
 		opCodePtr++; // move pointer to block number
 		std::cout<< "Block#:";
-		unsigned short blockNumber = 1; // temporary for testing
+		unsigned short blockNumber = i + 1; // temporary for testing
 		*opCodePtr = htons(blockNumber);
 		std::cout << blockNumber <<std::endl;
 
