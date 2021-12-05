@@ -18,12 +18,19 @@
 #include <sstream>
 #include <stdio.h>
 
-// to be moved to shared tftp file
+// op codes
 #define RRQ	1
 #define WRQ 2
 #define DATA 3
 #define ACK 4
 #define	ERROR 5
+
+// error codes
+#define NO_FILE 1
+#define NO_ACCESS 2
+#define OVERWRITE 6
+
+// max sizes
 #define MAXMESG 516
 #define MAXDATA 512
 
@@ -61,6 +68,33 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 	} else {
 		std::cout<< "file does not exist, send error back"<<std::endl;
 		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
+
+        // create ERROR packet
+        bzero(buffer, sizeof(buffer));
+        std::cout<< "creating ERROR packet" <<std::endl;
+		unsigned short opValue = ERROR;
+		unsigned short* buffPtr = (unsigned short *) buffer;
+		*buffPtr = htons(opValue);
+        std::cout<< "OP is: " << opValue <<std::endl;
+
+        buffPtr++;
+        unsigned short errorCode = NO_FILE;
+        *buffPtr = htons(errorCode);
+        std::cout<< "Error Code is : " << errorCode <<std::endl;
+
+        buffPtr++;
+        std::string errormessage = "File not found.";
+        strcpy((char*)buffPtr, errormessage.c_str());
+ 
+        // Send the ERROR packet
+		std::cout<< "sending ERROR packet" <<std::endl;
+        int n = sendto(sockfd, buffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+		if (n < 0) {
+			printf("%s: sendto error\n",progname);
+			exit(4);
+		} else {
+			std::cout<< "no issue sending packet" <<std::endl;
+		}
 
 		exit(99); // temporary, should just be sending back error instead of exiting
 	}
@@ -224,10 +258,43 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 	std::ifstream infile(fileNameString);
 	if (infile.good()){
 		std::cout<< "file exists, deleting data before writing to it"<<std::endl;
+
+        // create ERROR packet
+        char errBuff[MAXMESG];
+        bzero(errBuff, sizeof(errBuff));
+        std::cout<< "creating ERROR packet" <<std::endl;
+		unsigned short opValue = ERROR;
+		unsigned short* buffPtr = (unsigned short *) errBuff;
+		*buffPtr = htons(opValue);
+        std::cout<< "OP is: " << opValue <<std::endl;
+
+        buffPtr++;
+        unsigned short errorCode = NO_FILE;
+        *buffPtr = htons(errorCode);
+        std::cout<< "Error Code is : " << errorCode <<std::endl;
+
+        buffPtr++;
+        std::string errormessage = "File already exists.";
+        strcpy((char*)buffPtr, errormessage.c_str());
+ 
+        // Send the ERROR packet
+		std::cout<< "sending ERROR packet" <<std::endl;
+        int n = sendto(sockfd, errBuff, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
+		if (n < 0) {
+			printf("%s: sendto error\n",progname);
+			exit(4);
+		} else {
+			std::cout<< "no issue sending packet" <<std::endl;
+		}
+
+        exit(99); // temporary, should just be sending back error instead of exiting
+
+        /*
 		// help from: https://stackoverflow.com/questions/17032970/clear-data-inside-text-file-in-c
 		std::ofstream ofs;
 		ofs.open(fileNameString, std::ofstream::out | std::ofstream::trunc);
 		ofs.close();
+        */
 	} else {
 		std::cout<< "file does not exist, creating file of same name"<<std::endl;
 		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
