@@ -69,26 +69,27 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		std::cout<< "file does not exist, send error back"<<std::endl;
 		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
 
-		// create ERROR packet
-		bzero(buffer, sizeof(buffer));
-		std::cout<< "creating ERROR packet" <<std::endl;
+        // create ERROR packet
+        bzero(buffer, sizeof(buffer));
+        std::cout<< "creating ERROR packet" <<std::endl;
 		unsigned short opValue = ERROR;
 		unsigned short* buffPtr = (unsigned short *) buffer;
 		*buffPtr = htons(opValue);
-		std::cout<< "OP is: " << opValue <<std::endl;
+        std::cout<< "OP is: " << opValue <<std::endl;
 
-		buffPtr++;
-		unsigned short errorCode = NO_FILE;
-		*buffPtr = htons(errorCode);
-		std::cout<< "Error Code is : " << errorCode <<std::endl;
+        buffPtr++;
+        unsigned short errorCode = NO_FILE;
+        *buffPtr = htons(errorCode);
+        std::cout<< "Error Code is : " << errorCode <<std::endl;
 
-		buffPtr++;
-		std::string errormessage = "File not found.";
-		strcpy((char*)buffPtr, errormessage.c_str());
-
-		// Send the ERROR packet
+        buffPtr++;
+        std::string errormessage = "File not found.";
+        strcpy((char*)buffPtr, errormessage.c_str());
+        std::cout<< "Error Msg is : " << errormessage <<std::endl;
+ 
+        // Send the ERROR packet
 		std::cout<< "sending ERROR packet" <<std::endl;
-		int n = sendto(sockfd, buffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+        int n = sendto(sockfd, buffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 		if (n < 0) {
 			printf("%s: sendto error\n",progname);
 			exit(4);
@@ -166,15 +167,15 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 
 
 
-		/*
-		// timeout implementation
-		int timeoutCount = 0;
-		signal(SIGALRM,sig_handler); // Register signal handler
-		alarm(TIMEOUT_TIME); // set timer
-		alarm(0); // turn off alarm
-		*/
+        /*
+        // timeout implementation
+        int timeoutCount = 0;
+        signal(SIGALRM,sig_handler); // Register signal handler
+        alarm(TIMEOUT_TIME); // set timer
+        alarm(0); // turn off alarm
+        */
 
-
+        
 
 		// Wait to receive ACK from
 		std::cout<< "Waiting to receive ack from client"<<std::endl;
@@ -257,29 +258,29 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 	// check file exists
 	std::ifstream infile(fileNameString);
 	if (infile.good()){
-		std::cout<< "file exists, deleting data before writing to it"<<std::endl;
+		std::cout<< "file exists, delete data before writing to it"<<std::endl;
 
-		// create ERROR packet
-		char errBuff[MAXMESG];
-		bzero(errBuff, sizeof(errBuff));
-		std::cout<< "creating ERROR packet" <<std::endl;
+        // create ERROR packet
+        char errBuff[MAXMESG];
+        bzero(errBuff, sizeof(errBuff));
+        std::cout<< "creating ERROR packet" <<std::endl;
 		unsigned short opValue = ERROR;
 		unsigned short* buffPtr = (unsigned short *) errBuff;
 		*buffPtr = htons(opValue);
-		std::cout<< "OP is: " << opValue <<std::endl;
+        std::cout<< "OP is: " << opValue <<std::endl;
 
-		buffPtr++;
-		unsigned short errorCode = NO_FILE;
-		*buffPtr = htons(errorCode);
-		std::cout<< "Error Code is : " << errorCode <<std::endl;
+        buffPtr++;
+        unsigned short errorCode = OVERWRITE;
+        *buffPtr = htons(errorCode);
+        std::cout<< "Error Code is : " << errorCode <<std::endl;
 
-		buffPtr++;
-		std::string errormessage = "File already exists.";
-		strcpy((char*)buffPtr, errormessage.c_str());
-
-		// Send the ERROR packet
+        buffPtr++;
+        std::string errormessage = "File already exists.";
+        strcpy((char*)buffPtr, errormessage.c_str());
+ 
+        // Send the ERROR packet
 		std::cout<< "sending ERROR packet" <<std::endl;
-		int n = sendto(sockfd, errBuff, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
+        int n = sendto(sockfd, errBuff, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
 		if (n < 0) {
 			printf("%s: sendto error\n",progname);
 			exit(4);
@@ -287,14 +288,14 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 			std::cout<< "no issue sending packet" <<std::endl;
 		}
 
-		exit(99); // temporary, should just be sending back error instead of exiting
+        exit(99); // temporary, should just be sending back error instead of exiting
 
-		/*
+        /*
 		// help from: https://stackoverflow.com/questions/17032970/clear-data-inside-text-file-in-c
 		std::ofstream ofs;
 		ofs.open(fileNameString, std::ofstream::out | std::ofstream::trunc);
 		ofs.close();
-		*/
+        */
 	} else {
 		std::cout<< "file does not exist, creating file of same name"<<std::endl;
 		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
@@ -324,7 +325,21 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 		// get its op code to determine packet type
 		unsigned short opValue = tftp::GetPacketOPCode(buffer);
 		if (opValue == ERROR) {
-			std::cout<< "received error. end everything"<<std::endl;
+            unsigned short errorCode = GetBlockNumber(buffer);
+            char* bufpoint = buffer + 4;
+	        int errMsgLength = 0;
+	        for (int i = 4; i < MAXMESG; i++) {
+		        std::cout << buffer[i];
+		        if (buffer[i] == NULL) {
+			        std::cout<< "null found in getting ErrMsg"<<std::endl;
+			        break;
+		        }
+		        errMsgLength++;
+	        }
+	        char errMsg[errMsgLength];
+	        bcopy(bufpoint, errMsg, errMsgLength + 1);
+	        std::string result = std::string(errMsg);
+			printf("%s: Error Code %d - %s\n",progname, errorCode, errMsg);
 			exit(8);
 		} else
 		if (opValue == DATA) {

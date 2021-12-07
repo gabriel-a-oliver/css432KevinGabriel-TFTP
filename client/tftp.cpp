@@ -85,6 +85,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
         buffPtr++;
         std::string errormessage = "File not found.";
         strcpy((char*)buffPtr, errormessage.c_str());
+        std::cout<< "Error Msg is : " << errormessage <<std::endl;
  
         // Send the ERROR packet
 		std::cout<< "sending ERROR packet" <<std::endl;
@@ -257,7 +258,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 	// check file exists
 	std::ifstream infile(fileNameString);
 	if (infile.good()){
-		std::cout<< "file exists, deleting data before writing to it"<<std::endl;
+		std::cout<< "file exists, delete data before writing to it"<<std::endl;
 
         // create ERROR packet
         char errBuff[MAXMESG];
@@ -269,7 +270,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
         std::cout<< "OP is: " << opValue <<std::endl;
 
         buffPtr++;
-        unsigned short errorCode = NO_FILE;
+        unsigned short errorCode = OVERWRITE;
         *buffPtr = htons(errorCode);
         std::cout<< "Error Code is : " << errorCode <<std::endl;
 
@@ -324,7 +325,21 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 		// get its op code to determine packet type
 		unsigned short opValue = tftp::GetPacketOPCode(buffer);
 		if (opValue == ERROR) {
-			std::cout<< "received error. end everything"<<std::endl;
+            unsigned short errorCode = GetBlockNumber(buffer);
+            char* bufpoint = buffer + 4;
+	        int errMsgLength = 0;
+	        for (int i = 4; i < MAXMESG; i++) {
+		        std::cout << buffer[i];
+		        if (buffer[i] == NULL) {
+			        std::cout<< "null found in getting ErrMsg"<<std::endl;
+			        break;
+		        }
+		        errMsgLength++;
+	        }
+	        char errMsg[errMsgLength];
+	        bcopy(bufpoint, errMsg, errMsgLength + 1);
+	        std::string result = std::string(errMsg);
+			printf("%s: Error Code %d - %s\n",progname, errorCode, errMsg);
 			exit(8);
 		} else
 		if (opValue == DATA) {

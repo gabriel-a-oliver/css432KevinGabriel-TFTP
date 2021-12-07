@@ -119,7 +119,24 @@ int main(int argc, char *argv[])
 		unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
 		if (ackOpNumb == ACK) {
 			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
-		} else {
+		} else if (ackOpNumb == ERROR) {
+            unsigned short errorCode = tftp::GetBlockNumber(buffer);
+            char* ackpoint = buffer + 4;
+	        int errMsgLength = 0;
+	        for (int i = 4; i < MAXMESG; i++) {
+		        std::cout << buffer[i];
+		        if (buffer[i] == NULL) {
+			        std::cout<< "null found in getting ErrMsg"<<std::endl;
+			        break;
+		        }
+		        errMsgLength++;
+	        }
+	        char errMsg[errMsgLength];
+	        bcopy(ackpoint, errMsg, errMsgLength + 1);
+	        std::string result = std::string(errMsg);
+			printf("%s: Error Code %d - %s\n",progname, errorCode, errMsg);
+			exit(8);
+        } else {
 			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 		}
 

@@ -81,6 +81,41 @@ int main(int argc, char *argv[]) {
             // clear out buffer for reuse
 	        bzero(buffer, sizeof(buffer));
 
+            std::ifstream infile(fileNameString);
+            if (infile.good()){
+		        std::cout<< "file exists, delete data before writing to it"<<std::endl;
+
+                // create ERROR packet
+                char errBuff[MAXMESG];
+                bzero(errBuff, sizeof(errBuff));
+                std::cout<< "creating ERROR packet" <<std::endl;
+                unsigned short opValue = ERROR;
+                unsigned short* buffPtr = (unsigned short *) errBuff;
+                *buffPtr = htons(opValue);
+                std::cout<< "OP is: " << opValue <<std::endl;
+
+                buffPtr++;
+                unsigned short errorCode = OVERWRITE;
+                *buffPtr = htons(errorCode);
+                std::cout<< "Error Code is : " << errorCode <<std::endl;
+
+                buffPtr++;
+                std::string errormessage = "File already exists.";
+                strcpy((char*)buffPtr, errormessage.c_str());
+    
+                // Send the ERROR packet
+                std::cout<< "sending ERROR packet" <<std::endl;
+                int n = sendto(sockfd, errBuff, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
+                if (n < 0) {
+                    printf("%s: sendto error\n",progname);
+                    exit(4);
+                } else {
+                    std::cout<< "no issue sending packet" <<std::endl;
+                }
+
+                exit(99); // temporary, should just be sending back error instead of exiting
+            }
+
             std::cout<< "creating ack0 packet" <<std::endl;
             char ackBuffer[MAXMESG];
 			bzero(ackBuffer, sizeof(ackBuffer));
