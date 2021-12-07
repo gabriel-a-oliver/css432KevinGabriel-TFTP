@@ -824,7 +824,7 @@ std::string tftp::GetFileNameStr(char buffer[MAXMESG]) {
 		fileNameLength++;
 	}
 	char filename[fileNameLength];
-	bcopy(bufpoint, filename, fileNameLength);
+	bcopy(bufpoint, filename, fileNameLength + 1);
 	std::string result = std::string(filename);
 	return result;
 }

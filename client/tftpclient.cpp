@@ -76,16 +76,7 @@ int main(int argc, char *argv[])
 	} else {
 		std::cout<< "neither r or w" <<std::endl;
 	}
-
-	/*std::cout<< "printing file name of length:" << strlen(filename)<<std::endl;
-	for (int i = 0; i < strlen(filename); i++) {
-		if (filename[i] == NULL) {
-			std::cout << "~";
-		}
-		std::cout<< filename[i];
-	}
-	std::cout<<std::endl << "end of file name" << std::endl;*/
-
+	
 	std::cout<< "creating RRQ/WRQ request packet" <<std::endl;
 	bufpoint = buffer + 2; // move pointer to file name
 	strcpy(bufpoint, filename); // add file name to buffer
