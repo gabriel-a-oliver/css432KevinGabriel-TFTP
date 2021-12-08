@@ -12,14 +12,15 @@
 #include "tftp.cpp"
 
 
-#define SERV_UDP_PORT 51709
+//#define SERV_UDP_PORT 51709
 #define SERV_HOST_ADDR "10.158.82.41" //REPLACE WITH SERVER IP ADDRESS; lab11: 10.158.82.41
 
 char *progname;
+int serv_udp_port;
 
 int main(int argc, char *argv[])
 {
-	if (argc != 3) {
+	if (argc != 4) {
 		printf("%s: invalid number of arguments\n",progname);
 		exit(1);
 	}
@@ -28,6 +29,7 @@ int main(int argc, char *argv[])
 	progname = argv[0];
 	const char *op = argv[1];
 	char *filename = argv[2];
+	serv_udp_port = std::stoi(argv[3]);
 	std::cout<< "assigned command line arguments to variables"<<std::endl;
 
 	int sockfd;
@@ -36,7 +38,7 @@ int main(int argc, char *argv[])
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = inet_addr(SERV_HOST_ADDR);
-	serv_addr.sin_port = htons(SERV_UDP_PORT);
+	serv_addr.sin_port = htons(serv_udp_port);
 
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		printf("%s: can't open datagram socket\n",progname);
