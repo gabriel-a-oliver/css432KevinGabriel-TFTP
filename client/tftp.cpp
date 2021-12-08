@@ -58,49 +58,56 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		bzero(packetsList[i], MAXMESG);
 	}
 
+    std::cout << "File Name:" << fileName <<std::endl;
+
 	// open file
-	std::cout << "File Name:" << fileName <<std::endl;
+    FILE* file = fopen(fileName.c_str(), "r");
 
-	std::ifstream infile(fileName);
-	if (infile.good()){
-		std::cout<< "file exists" <<std::endl;
-		// help from: https://stackoverflow.com/questions/17032970/clear-data-inside-text-file-in-c
-	} else {
-		std::cout<< "file does not exist, send error back"<<std::endl;
-		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
-
+    if (file == NULL) {
         // create ERROR packet
         bzero(buffer, sizeof(buffer));
         std::cout<< "creating ERROR packet" <<std::endl;
-		unsigned short opValue = ERROR;
-		unsigned short* buffPtr = (unsigned short *) buffer;
-		*buffPtr = htons(opValue);
+        unsigned short opValue = ERROR;
+        unsigned short* buffPtr = (unsigned short *) buffer;
+        *buffPtr = htons(opValue);
         std::cout<< "OP is: " << opValue <<std::endl;
-
         buffPtr++;
-        unsigned short errorCode = NO_FILE;
-        *buffPtr = htons(errorCode);
-        std::cout<< "Error Code is : " << errorCode <<std::endl;
 
-        buffPtr++;
-        std::string errormessage = "File not found.";
-        strcpy((char*)buffPtr, errormessage.c_str());
-        std::cout<< "Error Msg is : " << errormessage <<std::endl;
- 
+        if (errno == ENOENT) {
+            unsigned short errorCode = NO_FILE;
+            *buffPtr = htons(errorCode);
+            std::cout<< "Error Code is : " << errorCode <<std::endl;
+
+            buffPtr++;
+            std::string errormessage = "File not found.";
+            strcpy((char*)buffPtr, errormessage.c_str());
+            std::cout<< "Error Msg is : " << errormessage <<std::endl;
+    
+        } else if (errno == EACCES) {
+            unsigned short errorCode = NO_ACCESS;
+            *buffPtr = htons(errorCode);
+            std::cout<< "Error Code is : " << errorCode <<std::endl;
+
+            buffPtr++;
+            std::string errormessage = "Access violation.";
+            strcpy((char*)buffPtr, errormessage.c_str());
+            std::cout<< "Error Msg is : " << errormessage <<std::endl;
+        }
+
         // Send the ERROR packet
-		std::cout<< "sending ERROR packet" <<std::endl;
+        std::cout<< "sending ERROR packet" <<std::endl;
         int n = sendto(sockfd, buffer, MAXMESG/*sizeof(fileBuffer)*/, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
-		if (n < 0) {
-			printf("%s: sendto error\n",progname);
-			exit(4);
-		} else {
-			std::cout<< "no issue sending packet" <<std::endl;
-		}
+        if (n < 0) {
+            printf("%s: sendto error\n",progname);
+            exit(4);
+        } else {
+            std::cout<< "no issue sending packet" <<std::endl;
+        }
 
-		exit(99); // temporary, should just be sending back error instead of exiting
-	}
+        exit(99); // temporary, should just be sending back error instead of exiting
+    }
 
-	std::fstream readFile (fileName);
+    std::cout<< "file exists" <<std::endl;
 
 	// create data packets
 	int fileStartIterator = 0;
@@ -110,8 +117,6 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		// fill buffer with up to MAXDATA amount of bytes
 		// store buffer i packetsList[i]
 		//CreateDataPacket(readFile, packetsList[i], fileStartIterator);
-
-
 
 		bzero(packetsList[i], (MAXMESG));
 		char* bufpoint = packetsList[i];
@@ -124,7 +129,6 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		std::cout<< "OP:";
 		std::cout << opValue <<std::endl;
 
-
 		opCodePtr++; // move pointer to block number
 		std::cout<< "Block#:";
 		unsigned short blockNumber = i + 1; // temporary for testing
@@ -133,8 +137,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 
 		bufpoint = packetsList[i] + 4; // move pointer to file name
 
-
-		int n = readFile.readsome(bufpoint, MAXDATA);
+        int n = fread(bufpoint, MAXDATA, 1, file);
 		fileStartIterator += n;
 		//int n = read(fd, bufpoint, MAXDATA); // read up to MAXDATA bytes
 		if (n < 0) {
@@ -143,14 +146,11 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 			std::cout << "read successful:" << n << std::endl;
 		}
 
-
-
-
 		std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
 		PrintPacket(packetsList[i]);
 	}
 	// close file
-	readFile.close(); // once finish reading whole file, close text file
+	fclose(file); // once finish reading whole file, close text file
 	std::cout<< "closed file"<<std::endl;
 
 
@@ -296,16 +296,11 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 		ofs.open(fileNameString, std::ofstream::out | std::ofstream::trunc);
 		ofs.close();
         */
-	} else {
-		std::cout<< "file does not exist, creating file of same name"<<std::endl;
-		// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
-		std::ofstream outfile(fileNameString);
 	}
 
-	// open file to be written at the end of the file
-	//std::ofstream writeFile(fileNameString);
-	std::ofstream writeFile (fileNameString);
-	//writeFile.open(fileNameString, std::ios::app);
+	std::cout<< "file does not exist, creating file of same name"<<std::endl;
+	// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
+	FILE* file = fopen(fileNameString.c_str(), "w");
 
 	char buffer[MAXMESG];
 	// fill buffer with information to enter while loop
@@ -348,13 +343,9 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 
 			if (receivedBlockNum == expectedBlockNum) {
 				//write packet to file
-				for (int i = 4; i < MAXMESG; i++) {
-					if (buffer[i] == NULL) {
-						break;
-					}
-					//std::cout <<"i:" << i << buffer[i] <<std::endl;
-					writeFile << buffer[i];
-				}
+                char* bufpoint = buffer + 4;
+
+                fwrite(bufpoint, MAXDATA, 1, file);
 
 				expectedBlockNum++;
 			}
@@ -377,7 +368,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 	}
 
 	// close file after leaving loop
-	infile.close();
+    fclose(file);
 
 
 
