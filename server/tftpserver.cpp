@@ -10,13 +10,15 @@
 #include <unistd.h>
 #include "tftp.cpp"
 
-#define SERV_UDP_PORT 51709
+//#define SERV_UDP_PORT 51709
+#define MAX_CLIENT_CONNECTIONS 11
 
 char *progname;
+int serv_udp_port;
 
 int main(int argc, char *argv[]) {
 	std::cout << "in main" << std::endl;
-	if (argc != 1) {
+	if (argc != 2) {
 		printf("%s: invalid number of arguments\n",progname);
 		exit(1);
     }
@@ -25,6 +27,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in serv_addr;
 
 	progname=argv[0];
+	serv_udp_port = std::stoi(argv[1]);
 
 	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		printf("%s: can't open datagram socket\n",progname);
@@ -34,7 +37,7 @@ int main(int argc, char *argv[]) {
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serv_addr.sin_port = htons(SERV_UDP_PORT);
+	serv_addr.sin_port = htons(serv_udp_port);
 
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) { 
 		printf("%s: can't bind local address\n",progname);

@@ -16,7 +16,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8faf2e8b-d0f1-436e-ba2a-da8d4e414dbe" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/client/tftpclient.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftpclient.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/tftpserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftpserver.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -115,6 +116,7 @@
       <workItem from="1638822447943" duration="740000" />
       <workItem from="1638825117628" duration="1359000" />
       <workItem from="1638854746846" duration="2167000" />
+      <workItem from="1638987180771" duration="404000" />
     </task>
     <servers />
   </component>
