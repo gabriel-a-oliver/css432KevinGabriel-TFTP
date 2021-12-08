@@ -42,9 +42,10 @@
 // timeout implementation
 #define TIMEOUT_TIME 3
 void sig_handler(int signum){
-    printf("Inside timeout handler function\n");
-    // retransmit packet here?
+    std::cout<< "inside sig_handler" <<std::endl;
+    timeoutCounter++;
     alarm(TIMEOUT_TIME); // Schedule a new alarm
+    std::cout<< "timeoutCounter incremented and alarm reset" <<std::endl;
 }
 */
 
@@ -170,9 +171,47 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
         /*
         // timeout implementation
         int timeoutCount = 0;
-        signal(SIGALRM,sig_handler); // Register signal handler
-        alarm(TIMEOUT_TIME); // set timer
-        alarm(0); // turn off alarm
+
+        while (true) {
+            signal(SIGALRM,sig_handler); // Register signal handler
+            alarm(TIMEOUT_TIME); // set timer
+
+            bzero(buffer, sizeof(buffer));
+            n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, (socklen_t*)&clilen);
+		    if (n < 0) {
+                std::cout<< "recvfrom value is -1"<<std::endl;
+                if (errno == EINTR) {
+                    std::cout<< "errno == EINTR"<<std::endl;
+                    std::cout<< "timeout count: " << timeoutCount <<std::endl;
+                    std::cout<< "resending last data packet"<<std::endl;
+                    n = sendto(sockfd, packetsList[i], MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
+                    if (n < 0) {
+                        printf("%s: sendto error\n",progname);
+                        exit(4);
+                    } else {
+                        std::cout<< "no issue sending packet" <<std::endl;
+                    }
+                    continue;
+                } else {
+                    printf("%s: recvfrom error\n",progname);
+                    exit(4);
+                }
+            }
+		    std::cout << "received something" << std::endl;
+            alarm(0); // turn off alarm
+            timeoutCount = 0;
+
+            // check if received packet is the ack
+            PrintPacket(buffer);
+            unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
+            if (ackOpNumb == ACK) {
+                std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
+                break;
+            } else {
+                std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+            }
+        }
+		
         */
 
         
