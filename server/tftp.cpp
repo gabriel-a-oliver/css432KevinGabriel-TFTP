@@ -173,7 +173,12 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
         int timeoutCount = 0;
 
         while (true) {
+	    // This does not need to be in while loop. Only needs to register once 
+	    //
             signal(SIGALRM,sig_handler); // Register signal handler
+	    siginterrupt( SIGALRM, 1 );
+	    //
+	    //
             alarm(TIMEOUT_TIME); // set timer
 
             bzero(buffer, sizeof(buffer));
