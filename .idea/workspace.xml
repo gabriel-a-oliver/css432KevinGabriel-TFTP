@@ -17,6 +17,9 @@
   <component name="ChangeListManager">
     <list default="true" id="8faf2e8b-d0f1-436e-ba2a-da8d4e414dbe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/makefile" beforeDir="false" afterPath="$PROJECT_DIR$/makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftpserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftpserver.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

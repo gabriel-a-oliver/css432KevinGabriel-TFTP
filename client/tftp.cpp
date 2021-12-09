@@ -389,8 +389,14 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 			if (receivedBlockNum == expectedBlockNum) {
 				//write packet to file
                 char* bufpoint = buffer + 4;
-
-                fwrite(bufpoint, MAXDATA, 1, file);
+				int writeSize = 0;
+				for (int i = 4; i < MAXDATA; i++) {
+					if (buffer[i] == NULL) {
+						break;
+					}
+					writeSize++;
+				}
+                fwrite(bufpoint, writeSize, 1, file);
 
 				expectedBlockNum++;
 			}
@@ -912,7 +918,7 @@ std::string tftp::GetMode(char buffer[MAXMESG], std::string fileName) {
 		modeCharLength++;
 	}
 	char modeChar[modeCharLength];
-	bcopy(bufpoint, modeChar, modeCharLength);
+	bcopy(bufpoint, modeChar, modeCharLength + 1);
 	result = std::string(modeChar);
 	return result;
 }
