@@ -167,7 +167,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 
 
         // timeout implementation
-        timeoutCount = 1;
+        timeoutCount = 0;
         signal(SIGALRM,sig_handler); // Register signal handler
 	    siginterrupt( SIGALRM, 1 );
 
@@ -949,6 +949,10 @@ int tftp::GetNumberOfRequeiredPackets(std::string filename) {
 
 bool tftp::CheckIfLastDataPacket(char buffer[MAXMESG]) {
 	bool result = false;
+    if (tftp::GetPacketOPCode(buffer) != DATA) {
+        return result;
+    }
+
 	int dataLength = 0;
 	for (int i = 4; i < MAXMESG; i++) {
 		if (buffer[i] == NULL) {
