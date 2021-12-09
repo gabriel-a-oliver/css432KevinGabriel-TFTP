@@ -360,7 +360,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 
         std::cout << "received something" << std::endl;
         alarm(0); // turn off alarm
-        timeoutCount = 1;
+        timeoutCount = 0;
 
 		// get its op code to determine packet type
 		unsigned short opValue = tftp::GetPacketOPCode(buffer);
