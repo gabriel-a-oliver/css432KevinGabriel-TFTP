@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 			}
 
             //call ReceiveFile and wait for DATA from client
-            tftp::ReceiveFile(progname, sockfd, pcli_addr, fileNameString);
+            tftp::ReceiveFile(progname, sockfd, pcli_addr, ackBuffer, fileNameString);
         } else {
 			std::cout<< "op was neither"<<std::endl;
 		}
