@@ -16,42 +16,43 @@
 
 char *progname;
 int serv_udp_port;
-
+//int mySocket;
 
 
 
 // Small struct to pass multiple variables in the threaded
 // function "GettingClientInput(void* threadArguments)"
-struct ThreadArguments {
+/*struct ThreadArguments {
 	int myThreadSocket;
 	struct sockaddr_in* myThreadClientAddress;
 	int myThreadClientLength;
 	char* myThreadBuffer;
-};
-void* OperateWithClient(void* threadArguments) {
+};*/
+void* OperateWithClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr, int clilen) {
 	std::cout<< "In OperateWithClient()"<<std::endl;
-	ThreadArguments* passedThreadArgs;
-	passedThreadArgs = (ThreadArguments*)threadArguments;
+	//ThreadArguments* passedThreadArgs;
+	//passedThreadArgs = (ThreadArguments*)threadArguments;
 
-	char* buffer;
+	/*char* buffer;
 	//bzero(buffer, MAXMESG);
-	buffer = passedThreadArgs->myThreadBuffer;
+	//buffer = passedThreadArgs->myThreadBuffer;
 	std::cout<< "buffer from thread arguments set:"<<std::endl;
 	tftp::PrintPacket(buffer);
-	int sockfd = passedThreadArgs->myThreadSocket;
-	std::cout<< "socket from thread arguments:" << sockfd <<std::endl;
+	//int sockfd = passedThreadArgs->myThreadSocket;
+	int sockfd = mySocket;
+	//std::cout<< "socket value:"<<sockfd<<std::endl<<"socket value from thread args:"<<passedThreadArgs->myThreadSocket<<std::endl;
 
 	sockaddr_in* pcli_addr_pointer = nullptr;
-	std::cout<< "assigning local pcli_addr_pointer with threaded arguments"<<std::endl;
-	pcli_addr_pointer = passedThreadArgs->myThreadClientAddress;
-	if (pcli_addr_pointer == nullptr) {
+	std::cout<< "assigning local pcli_addr_pointer with threaded arguments"<<std::endl;*/
+	//pcli_addr_pointer = passedThreadArgs->myThreadClientAddress;
+	/*if (pcli_addr_pointer == nullptr) {
 		std::cout<< "it was passed a nullPtr"<<std::endl;
 	} else {
 		std::cout<< "it was not passed a nullPtr"<<std::endl;
-	}
-	struct sockaddr_in pcli_addr = *pcli_addr_pointer;//passedThreadArgs->myThreadClientAddress;
-	int clilen = passedThreadArgs->myThreadClientLength;
-
+	}*/
+	//struct sockaddr_in pcli_addr = *pcli_addr_pointer;//passedThreadArgs->myThreadClientAddress;
+	//int clilen = passedThreadArgs->myThreadClientLength;
+	//std::cout<< "client length:"<<clilen<<std::endl<<"client length from thread args:"<<passedThreadArgs->myThreadClientLength<<std::endl;
 	unsigned short opNumber = tftp::GetPacketOPCode(buffer);
 	std::cout << "checking if op is RRQ or WRQ" << std::endl;
 	if (opNumber == RRQ) {
@@ -143,9 +144,9 @@ void* OperateWithClient(void* threadArguments) {
 
 
 
-void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr, int clilen) {
+/*void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr, int clilen) {
 	std::cout<< "In ThreadClient()"<<std::endl;
-
+	std::cout<< "socket value:" <<sockfd<<std::endl;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	// Initializing threading variables
@@ -159,7 +160,8 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 
 	// Assigning variables to pass as arguments
 	std::cout<< "assigning thread arguments"<<std::endl;
-	clientThreadArguments->myThreadSocket = sockfd;
+	mySocket = sockfd;
+	clientThreadArguments->myThreadSocket = mySocket;
 	std::cout<< "assigned thread socket:" << clientThreadArguments->myThreadSocket<<std::endl;
 	sockaddr_in* pcli_addr_pointer;
 	*pcli_addr_pointer = pcli_addr;
@@ -179,8 +181,8 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 				   (void*)clientThreadArguments);
 
 	// Close Thread and Free threaded arguments memory
-	int result;
-	result = pthread_join(clientThread, NULL);
+	//int result;
+	//result = pthread_join(clientThread, NULL);
 	//delete clientThreadArguments->myThreadClientAddress;
 	//delete[] clientThreadArguments->myThreadBuffer;
 	delete clientThreadArguments;
@@ -190,7 +192,7 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 
 
 
-}
+}*/
 
 
 void ClientConnectionsLoop(int sockfd) {
@@ -202,6 +204,7 @@ void ClientConnectionsLoop(int sockfd) {
 
 	for ( ; ; ) {
 		std::cout << "am in loop" << std::endl;
+
 		clilen = sizeof(struct sockaddr_in);
 
 		n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, (socklen_t*)&clilen);
@@ -211,10 +214,27 @@ void ClientConnectionsLoop(int sockfd) {
 		}
 
 		std::cout << "received something" << std::endl;
-
 		tftp::PrintPacket(buffer);
-		ThreadClient(buffer, sockfd, pcli_addr, clilen);
+		unsigned short myOpCode = tftp::GetPacketOPCode(buffer);
+		std::cout<< "Received OP code:"<<myOpCode<<std::endl;
+		if (myOpCode == RRQ || myOpCode == WRQ) {
+			std::cout<< "its a RRQ or a WRQ, forking"<<std::endl;
+			//ThreadClient(buffer, sockfd, pcli_addr, clilen);
+			int pid = fork();
+			if (pid < 0) {
+				std::cout<< "error in making fork"<<std::endl;
+				exit(99);
+			}
+			if (pid == 0) {
 
+				OperateWithClient(buffer, sockfd, pcli_addr, clilen);
+				//close(sockfd);
+				exit(7);
+			}
+		} //else {
+		//std::cout<< "not an RRQ or a WRQ, dont fork"<<std::endl;
+		//}
+		//close(sockfd);
 	}
 
 }
@@ -258,13 +278,9 @@ int main(int argc, char *argv[]) {
 	}
 	serv_udp_port = std::stoi(argv[1]);
 	int sockfd = SetUpServer();
-
-
+	std::cout<< "socket Value:" << sockfd <<std::endl;
 
 	ClientConnectionsLoop(sockfd);
-
-
-
 
 	return 0;
 }
