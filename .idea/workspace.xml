@@ -17,6 +17,7 @@
   <component name="ChangeListManager">
     <list default="true" id="8faf2e8b-d0f1-436e-ba2a-da8d4e414dbe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/query/cache-v2" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/query/cmakeFiles-v1" beforeDir="false" />
@@ -65,6 +66,9 @@
       <change beforePath="$PROJECT_DIR$/compile.sh" beforeDir="false" afterPath="$PROJECT_DIR$/compile.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/makefile" beforeDir="false" afterPath="$PROJECT_DIR$/makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.cpp" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/Testing/Temporary/LastTest.log" afterDir="false" />
+>>>>>>> Stashed changes
       <change beforePath="$PROJECT_DIR$/server/tftpserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftpserver.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -165,6 +169,7 @@
       <workItem from="1638825117628" duration="1359000" />
       <workItem from="1638854746846" duration="2167000" />
       <workItem from="1638987180771" duration="404000" />
+      <workItem from="1639169462731" duration="10588000" />
     </task>
     <servers />
   </component>

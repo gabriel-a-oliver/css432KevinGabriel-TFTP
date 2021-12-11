@@ -10,6 +10,7 @@
 #include <strings.h> // bzero
 #include <pthread.h>
 #include <valarray>
+#include <sys/wait.h>
 
 //#define SERV_UDP_PORT 51709
 #define MAX_CLIENT_CONNECTIONS 11
@@ -17,16 +18,28 @@
 char *progname;
 int serv_udp_port;
 
+<<<<<<< Updated upstream
+=======
+struct sockaddr_in myClientAddress;
+int mySocket;
+
+bool permissionToReceive = true;
+>>>>>>> Stashed changes
 
 
 
 // Small struct to pass multiple variables in the threaded
 // function "GettingClientInput(void* threadArguments)"
 struct ThreadArguments {
+<<<<<<< Updated upstream
 	int myThreadSocket;
+=======
+>>>>>>> Stashed changes
 	struct sockaddr_in* myThreadClientAddress;
+	int dummyInt;
 	int myThreadClientLength;
 	char* myThreadBuffer;
+<<<<<<< Updated upstream
 };
 void* OperateWithClient(void* threadArguments) {
 	std::cout<< "In OperateWithClient()"<<std::endl;
@@ -52,6 +65,54 @@ void* OperateWithClient(void* threadArguments) {
 	struct sockaddr_in pcli_addr = *pcli_addr_pointer;//passedThreadArgs->myThreadClientAddress;
 	int clilen = passedThreadArgs->myThreadClientLength;
 
+=======
+	int myThreadSocket;
+};
+void* OperateWithClient(void* threadArguments) {
+	std::cout<< "In OperateWithClient()"<<std::endl;
+	char* buffer;
+	buffer = (char*)threadArguments;
+
+	/*ThreadArguments* passedThreadArgs;
+	passedThreadArgs = (ThreadArguments*)threadArguments;
+
+	int myDummyInt = passedThreadArgs->dummyInt;
+	std::cout<< "dummy int from thread arguments:"<<myDummyInt<<std::endl;
+
+
+
+	int sockfd = passedThreadArgs->myThreadSocket;
+	std::cout<< "socket from thread arguments:"<<sockfd<<std::endl;
+
+	*//*sockaddr_in* pcli_addr_pointer = nullptr;
+	pcli_addr_pointer = passedThreadArgs->myThreadClientAddress;
+	std::cout<< "client address from thread arguments";
+	if (pcli_addr_pointer == nullptr) {
+		std::cout<< " is null"<<std::endl;
+	} else {
+		std::cout<< " is not null"<<std::endl;
+	}*//*
+	struct sockaddr_in pcli_addr = *passedThreadArgs->myThreadClientAddress;//*pcli_addr_pointer;
+
+	//int clilen = passedThreadArgs->myThreadClientLength;
+	int clilen = sizeof(pcli_addr);
+	std::cout<< "client addres length from threaded arguments:"<<clilen<<std::endl;*/
+
+	//buffer = passedThreadArgs->myThreadBuffer;
+	std::cout<< "buffer from thread arguments:"<<std::endl;
+	tftp::PrintPacket(buffer);
+
+
+	int sockfd = mySocket;
+	std::cout<< "socket from thread arguments:"<<sockfd<<std::endl;
+
+	struct sockaddr_in pcli_addr = myClientAddress;
+
+	int clilen = sizeof(pcli_addr);
+	std::cout<< "client address length from threaded arguments:"<<clilen<<std::endl;
+
+
+>>>>>>> Stashed changes
 	unsigned short opNumber = tftp::GetPacketOPCode(buffer);
 	std::cout << "checking if op is RRQ or WRQ" << std::endl;
 	if (opNumber == RRQ) {
@@ -137,6 +198,7 @@ void* OperateWithClient(void* threadArguments) {
 	} else {
 		std::cout<< "op was neither"<<std::endl;
 	}
+	permissionToReceive = true;
 	return nullptr;
 }
 
@@ -157,26 +219,43 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 	std::cout<< "allocating memory for thread arguments"<<std::endl;
 	clientThreadArguments = (ThreadArguments*)malloc(sizeof(ThreadArguments));
 
+
 	// Assigning variables to pass as arguments
+<<<<<<< Updated upstream
 	std::cout<< "assigning thread arguments"<<std::endl;
+=======
+	/*std::cout<< "assigning thread arguments"<<std::endl;
+
+	clientThreadArguments->dummyInt = 999;
+	std::cout<< "dummyInt:"<<clientThreadArguments->dummyInt<<std::endl;
+
+>>>>>>> Stashed changes
 	clientThreadArguments->myThreadSocket = sockfd;
 	std::cout<< "assigned thread socket:" << clientThreadArguments->myThreadSocket<<std::endl;
+
+	clientThreadArguments->myThreadClientAddress = (sockaddr_in*)malloc(sizeof(sockaddr_in));
 	sockaddr_in* pcli_addr_pointer;
 	*pcli_addr_pointer = pcli_addr;
 	clientThreadArguments->myThreadClientAddress = pcli_addr_pointer;
 	std::cout<< "assigned thread client address"<<std::endl;
+
 	clientThreadArguments->myThreadClientLength = clilen;
 	std::cout<< "assigned thread client address length:" << clientThreadArguments->myThreadClientLength<<std::endl;
 
 	clientThreadArguments->myThreadBuffer = buffer;
 	std::cout<< "packet assigned to thread arguments"<<std::endl;
-	tftp::PrintPacket(clientThreadArguments->myThreadBuffer);
+	tftp::PrintPacket(clientThreadArguments->myThreadBuffer);*/
+
+
+	mySocket = sockfd;
+	myClientAddress = pcli_addr;
+
 
 
 	std::cout<< "starting to thread"<<std::endl;
 	// Created new thread
 	pthread_create(&clientThread, &clientThreadAttr, OperateWithClient,
-				   (void*)clientThreadArguments);
+				   (void*)buffer);
 
 	// Close Thread and Free threaded arguments memory
 	int result;
@@ -191,6 +270,10 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 
 
 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 
 void ClientConnectionsLoop(int sockfd) {
@@ -199,8 +282,10 @@ void ClientConnectionsLoop(int sockfd) {
 	char buffer[MAXMESG];
 	bzero(buffer, MAXMESG);
 	struct sockaddr_in pcli_addr;
+	clilen = sizeof(struct sockaddr_in);
 
 	for ( ; ; ) {
+<<<<<<< Updated upstream
 		std::cout << "am in loop" << std::endl;
 		clilen = sizeof(struct sockaddr_in);
 
@@ -215,9 +300,33 @@ void ClientConnectionsLoop(int sockfd) {
 		tftp::PrintPacket(buffer);
 		ThreadClient(buffer, sockfd, pcli_addr, clilen);
 
+=======
+		std::cout << "Start of main server loop" << std::endl;
+		if (permissionToReceive) {
+			n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, (socklen_t *) &clilen);
+			if (n < 0) {
+				printf("%s: recvfrom error in main loop\n", progname);
+				exit(4);
+			}
+			permissionToReceive = false;
+			std::cout << "Received something in main server loop. Printing Packet:" << std::endl;
+			tftp::PrintPacket(buffer);
+
+			unsigned short opReceived = tftp::GetPacketOPCode(buffer);
+			if (opReceived == RRQ || opReceived == WRQ) {
+				std::cout << "clilen value before ThreadClient():" << clilen << std::endl;
+				ThreadClient(buffer, sockfd, pcli_addr, clilen);
+				pcli_addr = {0, 0, 0};
+			} else {
+				std::cout << "Received a RRQ or WRQ in main loop" << std::endl;
+			}
+			pcli_addr = {0,0,0};
+		}
+>>>>>>> Stashed changes
 	}
 
 }
+
 
 
 
@@ -241,7 +350,6 @@ int SetUpServer() {
 	}
 	return result;
 }
-
 
 
 int main(int argc, char *argv[]) {
