@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -8,11 +7,8 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <typeinfo>
 #include "tftp.cpp"
 
-
-//#define SERV_UDP_PORT 51709
 #define SERV_HOST_ADDR "10.158.82.41" //REPLACE WITH SERVER IP ADDRESS; lab11: 10.158.82.41
 
 char *progname;
@@ -86,9 +82,6 @@ int main(int argc, char *argv[])
 	char modePointer[5] = {'o','c','t','e','t'};
 	strcpy(bufpoint, modePointer); // add mode to buffer
 	bufpoint += strlen(modePointer) + 1; // move pointer and add null byte
-
-	/*std::cout<< "Printing fileName:" <<tftp::GetFileNameStr(buffer)<<std::endl;
-	std::cout << "Printing mode:" << tftp::GetMode(buffer, tftp::GetFileNameStr(buffer))<<std::endl;*/
 
 	tftp::PrintPacket(buffer);
 

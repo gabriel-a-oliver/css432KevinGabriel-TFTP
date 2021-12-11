@@ -127,7 +127,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "-j8"
+			"value" : "-j16"
 		},
 		{
 			"name" : "CMAKE_COLOR_MAKEFILE",
@@ -436,18 +436,6 @@
 			],
 			"type" : "STRING",
 			"value" : "-O2 -g -DNDEBUG"
-		},
-		{
-			"name" : "CMAKE_DEPENDS_USE_COMPILER",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
-				}
-			],
-			"type" : "UNINITIALIZED",
-			"value" : "FALSE"
 		},
 		{
 			"name" : "CMAKE_DLLTOOL",

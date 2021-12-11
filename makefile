@@ -2,7 +2,7 @@
 
 cd server
 g++ tftp.cpp
-g++ tftpserver.cpp -lpthread -o tftpserver
+g++ tftpserver.cpp -o tftpserver
 cd ..
 cd client
 g++ tftp.cpp
