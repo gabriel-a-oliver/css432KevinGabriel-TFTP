@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
 		printf("%s: can't bind local address\n",progname);
 		exit(3);
 	} else {
-        std::cout<< "binded socket"<<std::endl;
-    }
+		std::cout<< "binded socket"<<std::endl;
+	}
 
 	char *bufpoint; // for building packet
 	char buffer[MAXMESG]; // packet that will be sent
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 	} else {
 		std::cout<< "neither r or w" <<std::endl;
 	}
-	
+
 	std::cout<< "creating RRQ/WRQ request packet" <<std::endl;
 	bufpoint = buffer + 2; // move pointer to file name
 	strcpy(bufpoint, filename); // add file name to buffer
@@ -102,51 +102,82 @@ int main(int argc, char *argv[])
 	}
 
 	std::cout<< "Saving file name:";
-    // save file name before clearing buffer
-    std::string fileNameString = tftp::GetFileNameStr(buffer);
+	std::string fileNameString = tftp::GetFileNameStr(buffer);
 	std::cout<< fileNameString <<std::endl;
-
-    // clear out buffer for reuse
-	bzero(buffer, sizeof(buffer));
 
 	if (op[1] == 'r') {
 		// if RRQ, call tftp shared receiving function
-		tftp::ReceiveFile(progname, sockfd, serv_addr, fileNameString);
+		tftp::ReceiveFile(progname, sockfd, serv_addr, buffer, fileNameString);
 	} else if (op[1] == 'w') {
-        std::cout<< "waiting for ACK0 from server" <<std::endl;
-        tftp::ReceiveMessage(sockfd, (struct sockaddr *) &serv_addr, buffer);
+		std::cout<< "waiting for ACK0 from server" <<std::endl;
 
-		// check if received packet is the ack
-		tftp::PrintPacket(buffer);
-		unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
-		if (ackOpNumb == ACK) {
-			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
-		} else if (ackOpNumb == ERROR) {
-            unsigned short errorCode = tftp::GetBlockNumber(buffer);
-            char* ackpoint = buffer + 4;
-	        int errMsgLength = 0;
-	        for (int i = 4; i < MAXMESG; i++) {
-		        std::cout << buffer[i];
-		        if (buffer[i] == NULL) {
-			        std::cout<< "null found in getting ErrMsg"<<std::endl;
-			        break;
-		        }
-		        errMsgLength++;
-	        }
-	        char errMsg[errMsgLength];
-	        bcopy(ackpoint, errMsg, errMsgLength + 1);
-	        std::string result = std::string(errMsg);
-			printf("%s: Error Code %d - %s\n",progname, errorCode, errMsg);
-			exit(8);
-        } else {
-			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+		// timeout implementation
+		timeoutCount = 1;
+		char ackBuffer[MAXMESG];
+		int servlen = sizeof(struct sockaddr);
+
+		signal(SIGALRM,sig_handler); // Register signal handler
+		siginterrupt(SIGALRM, 1);
+
+		while (true) {
+			bzero(ackBuffer, sizeof(ackBuffer));
+
+			alarm(TIMEOUT_TIME); // set timer
+
+			n = recvfrom(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &serv_addr, (socklen_t*)&servlen);
+			if (n < 0) {
+				std::cout<< "recvfrom value is -1"<<std::endl;
+				if (errno == EINTR && timeoutCount <= 10) {
+					std::cout<< "errno == EINTR"<<std::endl;
+					std::cout<< "timeout count: " << timeoutCount <<std::endl;
+					std::cout<< "resending last data packet"<<std::endl;
+					n = sendto(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &serv_addr, servlen);
+					if (n < 0) {
+						printf("%s: sendto error\n",progname);
+						exit(4);
+					} else {
+						std::cout<< "no issue sending packet" <<std::endl;
+					}
+					continue;
+				} else {
+					printf("%s: recvfrom error\n",progname);
+					exit(4);
+				}
+			}
+			std::cout << "received something" << std::endl;
+			alarm(0); // turn off alarm
+			timeoutCount = 1;
+
+			// check if received packet is the ack
+			tftp::PrintPacket(ackBuffer);
+			unsigned short ackOpNumb = tftp::GetPacketOPCode(ackBuffer);
+			if (ackOpNumb == ACK && tftp::GetBlockNumber(ackBuffer) == 0) {
+				std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(ackBuffer) <<std::endl;
+				break;
+			} else if (ackOpNumb == ERROR) {
+				unsigned short errorCode = tftp::GetBlockNumber(ackBuffer);
+				char* ackpoint = ackBuffer + 4;
+				int errMsgLength = 0;
+				for (int i = 4; i < MAXMESG; i++) {
+					std::cout << ackBuffer[i];
+					if (ackBuffer[i] == NULL) {
+						std::cout<< "null found in getting ErrMsg"<<std::endl;
+						break;
+					}
+					errMsgLength++;
+				}
+				char errMsg[errMsgLength];
+				bcopy(ackpoint, errMsg, errMsgLength + 1);
+				std::string result = std::string(errMsg);
+				printf("%s: Error Code %d - %s\n",progname, errorCode, errMsg);
+				exit(8);
+			} else {
+				std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+			}
+
+
 		}
-
-        /*char fileBuffer[MAXMESG];
-		bzero(fileBuffer, MAXMESG);*/
-
-        tftp::SendFile(progname, sockfd, serv_addr, sizeof(struct sockaddr_in), buffer, /*fileBuffer,*/ fileNameString);
-		
+		tftp::SendFile(progname, sockfd, serv_addr, sizeof(struct sockaddr_in), buffer, /*fileBuffer,*/ fileNameString);
 	} else {
 		std::cout<< "was not RRQ or WRQ" <<std::endl;
 	}

@@ -36,18 +36,17 @@
 
 #include "tftp.h"
 
-
-
-/*
-// timeout implementation
+int timeoutCount;
 #define TIMEOUT_TIME 3
+
+
+// timeout implementation
 void sig_handler(int signum){
-    std::cout<< "inside sig_handler" <<std::endl;
-    timeoutCounter++;
-    alarm(TIMEOUT_TIME); // Schedule a new alarm
-    std::cout<< "timeoutCounter incremented and alarm reset" <<std::endl;
+	std::cout<< "inside sig_handler" <<std::endl;
+	timeoutCount++;
+	std::cout<< "timeoutCounter incremented" <<std::endl;
 }
-*/
+
 
 
 
@@ -167,20 +166,20 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		}
 
 
-
-		/*
 		// timeout implementation
-		int timeoutCount = 0;
+		timeoutCount = 0;
+		signal(SIGALRM,sig_handler); // Register signal handler
+		siginterrupt( SIGALRM, 1 );
 
 		while (true) {
-			signal(SIGALRM,sig_handler); // Register signal handler
+			bzero(buffer, sizeof(buffer));
+
 			alarm(TIMEOUT_TIME); // set timer
 
-			bzero(buffer, sizeof(buffer));
 			n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, (socklen_t*)&clilen);
 			if (n < 0) {
 				std::cout<< "recvfrom value is -1"<<std::endl;
-				if (errno == EINTR) {
+				if (errno == EINTR && timeoutCount <= 10) {
 					std::cout<< "errno == EINTR"<<std::endl;
 					std::cout<< "timeout count: " << timeoutCount <<std::endl;
 					std::cout<< "resending last data packet"<<std::endl;
@@ -199,40 +198,18 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 			}
 			std::cout << "received something" << std::endl;
 			alarm(0); // turn off alarm
-			timeoutCount = 0;
+			timeoutCount = 1;
 
 			// check if received packet is the ack
 			PrintPacket(buffer);
 			unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
-			if (ackOpNumb == ACK) {
+			if (ackOpNumb == ACK && tftp::GetBlockNumber(buffer) == (i+1)) {
 				std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
 				break;
 			} else {
-				std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
+				std::cout<< "no correct ack received. received:"<<ackOpNumb<<std::endl;
+				std::cout<< "block #: "<< tftp::GetBlockNumber(buffer) <<std::endl;
 			}
-		}
-
-		*/
-
-
-
-		// Wait to receive ACK from
-		std::cout<< "Waiting to receive ack from client"<<std::endl;
-		bzero(buffer, sizeof(buffer));
-		n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, (socklen_t*)&clilen);
-		if (n < 0) {
-			printf("%s: recvfrom error\n",progname);
-			exit(4);
-		}
-		std::cout << "received something" << std::endl;
-
-		// check if received packet is the ack
-		PrintPacket(buffer);
-		unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
-		if (ackOpNumb == ACK) {
-			std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
-		} else {
-			std::cout<< "no ack received. received:"<<ackOpNumb<<std::endl;
 		}
 	}
 
@@ -270,7 +247,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 	*//*
 }*/
 
-void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, std::string fileNameString) {
+void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, char ackBuffer[MAXMESG], std::string fileNameString) {
 
 	/*
 	 * tftp::ReceiveFile should do:
@@ -348,13 +325,42 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 	}
 	unsigned short expectedBlockNum = 1;
 
+	int rcvlen = sizeof(struct sockaddr);
+
+	timeoutCount = 1;
+	signal(SIGALRM,sig_handler); // Register signal handler
+	siginterrupt( SIGALRM, 1 );
+
 	while (!tftp::CheckIfLastDataPacket(buffer)) {
 		// empty buffer of any previous data
 		bzero(buffer, MAXMESG);
 
-		// get latest packet
-		tftp::ReceivePacketHelper(sockfd, (struct sockaddr *) &sending_addr, buffer);
-		PrintPacket(buffer);
+		alarm(TIMEOUT_TIME);
+
+		int n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &sending_addr, (socklen_t*)&rcvlen);
+		if (n < 0) {
+			std::cout<< "recvfrom value is -1"<<std::endl;
+			if (errno == EINTR && timeoutCount <= 10) {
+				std::cout<< "errno == EINTR"<<std::endl;
+				std::cout<< "timeout count: " << timeoutCount <<std::endl;
+				std::cout<< "resending last data packet"<<std::endl;
+				n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
+				if (n < 0) {
+					printf("%s: sendto error\n",progname);
+					exit(4);
+				} else {
+					std::cout<< "no issue sending packet" <<std::endl;
+				}
+				continue;
+			} else {
+				printf("%s: recvfrom error\n",progname);
+				exit(4);
+			}
+		}
+
+		std::cout << "received something" << std::endl;
+		alarm(0); // turn off alarm
+		timeoutCount = 0;
 
 		// get its op code to determine packet type
 		unsigned short opValue = tftp::GetPacketOPCode(buffer);
@@ -390,13 +396,11 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 					}
 					writeSize++;
 				}
-
 				fwrite(bufpoint, writeSize, 1, file);
 
 				expectedBlockNum++;
 			}
 			// regardless if expected packet, send ack packet of received block number
-			char ackBuffer[MAXMESG];
 			bzero(ackBuffer, MAXMESG);
 			tftp::CreateAckPacket(ackBuffer, receivedBlockNum);
 			int n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
@@ -945,6 +949,10 @@ int tftp::GetNumberOfRequeiredPackets(std::string filename) {
 
 bool tftp::CheckIfLastDataPacket(char buffer[MAXMESG]) {
 	bool result = false;
+	if (tftp::GetPacketOPCode(buffer) != DATA) {
+		return result;
+	}
+
 	int dataLength = 0;
 	for (int i = 4; i < MAXMESG; i++) {
 		if (buffer[i] == NULL) {

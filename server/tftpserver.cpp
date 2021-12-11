@@ -18,54 +18,20 @@
 char *progname;
 int serv_udp_port;
 
-<<<<<<< Updated upstream
-=======
 struct sockaddr_in myClientAddress;
 int mySocket;
 
 bool permissionToReceive = true;
->>>>>>> Stashed changes
 
 
 
 // Small struct to pass multiple variables in the threaded
 // function "GettingClientInput(void* threadArguments)"
 struct ThreadArguments {
-<<<<<<< Updated upstream
-	int myThreadSocket;
-=======
->>>>>>> Stashed changes
 	struct sockaddr_in* myThreadClientAddress;
 	int dummyInt;
 	int myThreadClientLength;
 	char* myThreadBuffer;
-<<<<<<< Updated upstream
-};
-void* OperateWithClient(void* threadArguments) {
-	std::cout<< "In OperateWithClient()"<<std::endl;
-	ThreadArguments* passedThreadArgs;
-	passedThreadArgs = (ThreadArguments*)threadArguments;
-
-	char* buffer;
-	//bzero(buffer, MAXMESG);
-	buffer = passedThreadArgs->myThreadBuffer;
-	std::cout<< "buffer from thread arguments set:"<<std::endl;
-	tftp::PrintPacket(buffer);
-	int sockfd = passedThreadArgs->myThreadSocket;
-	std::cout<< "socket from thread arguments:" << sockfd <<std::endl;
-
-	sockaddr_in* pcli_addr_pointer = nullptr;
-	std::cout<< "assigning local pcli_addr_pointer with threaded arguments"<<std::endl;
-	pcli_addr_pointer = passedThreadArgs->myThreadClientAddress;
-	if (pcli_addr_pointer == nullptr) {
-		std::cout<< "it was passed a nullPtr"<<std::endl;
-	} else {
-		std::cout<< "it was not passed a nullPtr"<<std::endl;
-	}
-	struct sockaddr_in pcli_addr = *pcli_addr_pointer;//passedThreadArgs->myThreadClientAddress;
-	int clilen = passedThreadArgs->myThreadClientLength;
-
-=======
 	int myThreadSocket;
 };
 void* OperateWithClient(void* threadArguments) {
@@ -112,7 +78,6 @@ void* OperateWithClient(void* threadArguments) {
 	std::cout<< "client address length from threaded arguments:"<<clilen<<std::endl;
 
 
->>>>>>> Stashed changes
 	unsigned short opNumber = tftp::GetPacketOPCode(buffer);
 	std::cout << "checking if op is RRQ or WRQ" << std::endl;
 	if (opNumber == RRQ) {
@@ -194,7 +159,7 @@ void* OperateWithClient(void* threadArguments) {
 		}
 
 		//call ReceiveFile and wait for DATA from client
-		tftp::ReceiveFile(progname, sockfd, pcli_addr, fileNameString);
+		tftp::ReceiveFile(progname, sockfd, pcli_addr, ackBuffer, fileNameString);
 	} else {
 		std::cout<< "op was neither"<<std::endl;
 	}
@@ -207,7 +172,7 @@ void* OperateWithClient(void* threadArguments) {
 
 void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr, int clilen) {
 	std::cout<< "In ThreadClient()"<<std::endl;
-
+	std::cout<< "socket value:" <<sockfd<<std::endl;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	// Initializing threading variables
@@ -221,15 +186,11 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 
 
 	// Assigning variables to pass as arguments
-<<<<<<< Updated upstream
-	std::cout<< "assigning thread arguments"<<std::endl;
-=======
 	/*std::cout<< "assigning thread arguments"<<std::endl;
 
 	clientThreadArguments->dummyInt = 999;
 	std::cout<< "dummyInt:"<<clientThreadArguments->dummyInt<<std::endl;
 
->>>>>>> Stashed changes
 	clientThreadArguments->myThreadSocket = sockfd;
 	std::cout<< "assigned thread socket:" << clientThreadArguments->myThreadSocket<<std::endl;
 
@@ -258,8 +219,8 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 				   (void*)buffer);
 
 	// Close Thread and Free threaded arguments memory
-	int result;
-	result = pthread_join(clientThread, NULL);
+	//int result;
+	//result = pthread_join(clientThread, NULL);
 	//delete clientThreadArguments->myThreadClientAddress;
 	//delete[] clientThreadArguments->myThreadBuffer;
 	delete clientThreadArguments;
@@ -270,10 +231,7 @@ void ThreadClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr
 
 
 }
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 
 
 void ClientConnectionsLoop(int sockfd) {
@@ -285,22 +243,6 @@ void ClientConnectionsLoop(int sockfd) {
 	clilen = sizeof(struct sockaddr_in);
 
 	for ( ; ; ) {
-<<<<<<< Updated upstream
-		std::cout << "am in loop" << std::endl;
-		clilen = sizeof(struct sockaddr_in);
-
-		n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, (socklen_t*)&clilen);
-		if (n < 0) {
-			printf("%s: recvfrom error\n",progname);
-			exit(4);
-		}
-
-		std::cout << "received something" << std::endl;
-
-		tftp::PrintPacket(buffer);
-		ThreadClient(buffer, sockfd, pcli_addr, clilen);
-
-=======
 		std::cout << "Start of main server loop" << std::endl;
 		if (permissionToReceive) {
 			n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, (socklen_t *) &clilen);
@@ -322,7 +264,6 @@ void ClientConnectionsLoop(int sockfd) {
 			}
 			pcli_addr = {0,0,0};
 		}
->>>>>>> Stashed changes
 	}
 
 }
@@ -366,13 +307,9 @@ int main(int argc, char *argv[]) {
 	}
 	serv_udp_port = std::stoi(argv[1]);
 	int sockfd = SetUpServer();
-
-
+	std::cout<< "socket Value:" << sockfd <<std::endl;
 
 	ClientConnectionsLoop(sockfd);
-
-
-
 
 	return 0;
 }
