@@ -30,6 +30,8 @@ int serv_udp_port;
 };*/
 void* OperateWithClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr, int clilen) {
 	std::cout<< "In OperateWithClient()"<<std::endl;
+
+	//close(sockfd);
 	//ThreadArguments* passedThreadArgs;
 	//passedThreadArgs = (ThreadArguments*)threadArguments;
 
@@ -226,9 +228,29 @@ void ClientConnectionsLoop(int sockfd) {
 				exit(99);
 			}
 			if (pid == 0) {
-
-				OperateWithClient(buffer, sockfd, pcli_addr, clilen);
 				//close(sockfd);
+				int forkedSockfd;
+
+				//struct sockaddr_in serv_addr;
+				struct sockaddr_in forkedServAddr;
+				//sockfd;
+
+				if ( (forkedSockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+					printf("%s: can't open datagram socket\n",progname);
+					exit(2);
+				}
+				bzero((char *) &forkedServAddr, sizeof(forkedServAddr));
+				forkedServAddr.sin_family = AF_INET;
+				forkedServAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+				forkedServAddr.sin_port = htons(0);
+
+				if (bind(forkedSockfd, (struct sockaddr *) &forkedServAddr, sizeof(forkedServAddr)) < 0) {
+					printf("%s: can't bind local address in forked process\n",progname);
+					exit(3);
+				}
+
+				OperateWithClient(buffer, forkedSockfd, pcli_addr, clilen);
+				//close(forkedSockfd);
 				exit(7);
 			}
 		} //else {
@@ -256,7 +278,7 @@ int SetUpServer() {
 	serv_addr.sin_port = htons(serv_udp_port);
 
 	if (bind(result, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-		printf("%s: can't bind local address\n",progname);
+		printf("%s: can't bind local address for main\n",progname);
 		exit(3);
 	}
 	return result;
