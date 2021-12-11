@@ -29,6 +29,7 @@
 #define NO_FILE 1
 #define NO_ACCESS 2
 #define OVERWRITE 6
+#define UNDEFINED 99
 
 // max sizes
 #define MAXMESG 516
@@ -72,31 +73,19 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
         buffPtr++;
 
         if (errno == ENOENT) {
-            unsigned short errorCode = NO_FILE;
-            *buffPtr = htons(errorCode);
-            std::cout<< "Error Code is : " << errorCode <<std::endl;
-
-            buffPtr++;
-            std::string errormessage = "File not found.";
-            strcpy((char*)buffPtr, errormessage.c_str());
-            std::cout<< "Error Msg is : " << errormessage <<std::endl;
-    
-        } else if (errno == EACCES) {
-            unsigned short errorCode = NO_ACCESS;
-            *buffPtr = htons(errorCode);
-            std::cout<< "Error Code is : " << errorCode <<std::endl;
-
-            buffPtr++;
-            std::string errormessage = "Access violation.";
-            strcpy((char*)buffPtr, errormessage.c_str());
-            std::cout<< "Error Msg is : " << errormessage <<std::endl;
-        }
+			tftp::CreateErrorPacketHelper(buffPtr, NO_FILE, "File not found.");
+        } else if (errno == EACCES){
+			tftp::CreateErrorPacketHelper(buffPtr, NO_ACCESS, "Access violation.");
+        } else {
+			// errno is UNDEFINED
+			tftp::CreateErrorPacketHelper(buffPtr, UNDEFINED, "Undefined error.");
+		}
 
         // Send the ERROR packet
         std::cout<< "sending ERROR packet" <<std::endl;
 		tftp::SendPacketHelper(progname, sockfd, buffer, receiving_addr);
 
-        exit(99); // temporary, should just be sending back error instead of exiting
+        exit(13);
     }
 
     std::cout<< "file exists" <<std::endl;
@@ -163,14 +152,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
                     std::cout<< "timeout count: " << timeoutCount <<std::endl;
                     std::cout<< "resending last data packet"<<std::endl;
 					tftp::SendPacketHelper(progname, sockfd, packetsList[i], receiving_addr);
-					/*
-                    n = sendto(sockfd, packetsList[i], MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
-                    if (n < 0) {
-                        printf("%s: sendto error\n",progname);
-                        exit(4);
-                    } else {
-                        std::cout<< "no issue sending packet" <<std::endl;
-                    }*/
+
                     continue;
                 } else {
                     printf("%s: recvfrom error\n",progname);
@@ -185,43 +167,29 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
             PrintPacket(buffer);
             unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
             if (ackOpNumb == ACK && tftp::GetBlockNumber(buffer) == (i+1)) {
-                std::cout<< "ack received. transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
+                std::cout<< "ACH received. Transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
                 break;
             } else {
-                std::cout<< "no correct ack received. received:"<<ackOpNumb<<std::endl;
-                std::cout<< "block #: "<< tftp::GetBlockNumber(buffer) <<std::endl;
+                std::cout<< "No correct ACK received. Received:"<<ackOpNumb<<std::endl;
+                std::cout<< "Need ACK for block: "<< tftp::GetBlockNumber(buffer) <<std::endl;
             }
         }
 	}
-
 }
 
 void tftp::SendFileAlreadyExistsError(char *progname, int sockfd, struct sockaddr_in pcli_addr) {
-	std::cout<< "in tftp::SendFileAlreadyExistsError()" <<std::endl;
 	// create ERROR packet
 	char errBuff[MAXMESG];
 	bzero(errBuff, sizeof(errBuff));
 	unsigned short opValue = ERROR;
 	unsigned short* buffPtr = (unsigned short *) errBuff;
 	*buffPtr = htons(opValue);
-
 	buffPtr++;
-	unsigned short errorCode = OVERWRITE;
-	*buffPtr = htons(errorCode);
-
-	buffPtr++;
-	std::string errormessage = "File already exists.";
-	strcpy((char*)buffPtr, errormessage.c_str());
+	tftp::CreateErrorPacketHelper(buffPtr, OVERWRITE, "File already exists.");
 
 	// Send the ERROR packet
 	std::cout<< "sending ERROR packet" <<std::endl;
-	int n = sendto(sockfd, errBuff, MAXMESG, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
-	if (n < 0) {
-		printf("%s: sendto error\n",progname);
-		exit(4);
-	} else {
-		std::cout<< "no issue sending packet" <<std::endl;
-	}
+	tftp::SendPacketHelper(progname, sockfd, errBuff, pcli_addr);
 	exit(9);
 }
 
@@ -263,13 +231,8 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
                 std::cout<< "errno == EINTR"<<std::endl;
                 std::cout<< "timeout count: " << timeoutCount <<std::endl;
                 std::cout<< "resending last data packet"<<std::endl;
-                n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
-                if (n < 0) {
-                    printf("%s: sendto error\n",progname);
-                    exit(4);
-                } else {
-                    std::cout<< "no issue sending packet" <<std::endl;
-                }
+				tftp::SendPacketHelper(progname, sockfd, ackBuffer, sending_addr);
+
                 continue;
             } else {
                 printf("%s: recvfrom error\n",progname);
@@ -324,13 +287,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 			tftp::CreateAckPacket(ackBuffer, receivedBlockNum);
 
 			SendPacketHelper(progname, sockfd, ackBuffer, sending_addr);
-			int n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &sending_addr, sizeof(sending_addr));
-			if (n < 0) {
-				printf("%s: sendto error\n",progname);
-				exit(4);
-			} else {
-				std::cout<< "no issue sending packet" <<std::endl;
-			}
+
 		}
 		else {
 			std::cout<< "unexpected OP code received:"<<opValue<<" ending process"<<std::endl;
@@ -527,4 +484,13 @@ void tftp::SendPacketHelper(char* progname, int sockfd, char buffer[MAXMESG], st
 	} else {
 		std::cout<< "no issue sending packet" <<std::endl;
 	}
+}
+
+void tftp::CreateErrorPacketHelper(unsigned short* buffPtr, unsigned short errorCode, std::string errorMessage) {
+	unsigned short myErrorCode = errorCode;
+	*buffPtr = htons(errorCode);
+
+	buffPtr++;
+	std::string myErrorMessage = errorMessage;
+	strcpy((char*)buffPtr, myErrorMessage.c_str());
 }

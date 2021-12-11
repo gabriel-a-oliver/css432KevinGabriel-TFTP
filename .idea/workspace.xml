@@ -19,33 +19,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/tftpclient.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftpclient.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/cmakeFiles-v1-aa98cf48fdd68d192641.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/index-2021-12-11T00-45-52-0832.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Makefile.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Makefile.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/clion-log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/clion-log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/.cmake/api/v1/reply/cache-v2-bfee8d3624644f8f1fcf.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/.cmake/api/v1/reply/cmakeFiles-v1-e9bf0d7f855afaa3f80d.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/.cmake/api/v1/reply/index-2021-12-11T00-45-48-0811.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeCache.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeCache.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/CMakeOutput.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/CMakeOutput.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/Makefile.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/Makefile.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/Progress/4" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/Progress/count.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/clion-environment.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/clion-environment.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/clion-log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/clion-log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/CXX.includecache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/cmake_clean.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/depend.internal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/CMakeFiles/css432KevinGabriel.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-wsldebug/css432KevinGabriel.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-wsldebug/css432KevinGabriel.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/makefile" beforeDir="false" afterPath="$PROJECT_DIR$/makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/tftpserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftpserver.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,7 +125,7 @@
       <workItem from="1638825117628" duration="1359000" />
       <workItem from="1638854746846" duration="2167000" />
       <workItem from="1638987180771" duration="404000" />
-      <workItem from="1639248800446" duration="10644000" />
+      <workItem from="1639248800446" duration="14045000" />
     </task>
     <servers />
   </component>

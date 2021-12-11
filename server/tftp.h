@@ -43,5 +43,6 @@ public:
 
 private:
 	static void SendPacketHelper(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr);
+	static void CreateErrorPacketHelper(unsigned short* buffPtr, unsigned short errorCode, std::string errorMessage);
 };
 #endif //CSS432KEVINGABRIEL_TFTP_H
