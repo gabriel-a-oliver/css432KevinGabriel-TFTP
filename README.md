@@ -25,10 +25,10 @@ client programs.
 "./tftpserver 519709" command. The program takes 1 argument - port number,
 519709 in our case.
 
-4.Start the client: The client takes 3 arguments - operation, file name, and
-port number. The operation will be in the format of either be "-r" or "-w" and
-file name will be "filename.txt". An example command is
-"./tftpclient -r test.txt 519709".
+4. Start the client: Go to the client directory and run the client program. The
+client program takes 3 arguments - operation, file name, and port number. The 
+operation will be in the format of either be "-r" or "-w" and file name will be
+"filename.txt". An example command is "./tftpclient -r test.txt 519709".
 
 Test cases:
 1. Read small/large file: Have server running and "./tftpclient -r test.txt 519709"
