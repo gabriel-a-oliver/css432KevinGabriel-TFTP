@@ -251,7 +251,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 				//write packet to file
                 char* bufpoint = buffer + 4;
 				int writeSize = 0;
-				for (int i = 4; i < MAXDATA; i++) {
+				for (int i = 4; i < MAXMESG; i++) {
 					if (buffer[i] == NULL) {
 						break;
 					}
