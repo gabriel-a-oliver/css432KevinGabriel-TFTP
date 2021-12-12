@@ -2,10 +2,8 @@
 // Created by Gabriel Oliver and Kevin Huang on 11/16/2021.
 //
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
 #include <errno.h>          // for retrieving the error number.
 #include <string.h>         // for strerror function.
@@ -13,10 +11,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
-#include <fcntl.h>
-#include <cassert>
 #include <sstream>
-#include <stdio.h>
 
 // op codes
 #define RRQ	1
@@ -40,98 +35,84 @@
 int timeoutCount;
 #define TIMEOUT_TIME 3
 
-
-// timeout implementation
+// Parameters: int signum
+//
+// Post: Increments timeout counter
 void sig_handler(int signum){
 	std::cout<< "inside sig_handler" <<std::endl;
 	timeoutCount++;
 	std::cout<< "timeoutCounter incremented" <<std::endl;
 }
 
-
-void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_addr, int clilen, char buffer[MAXMESG], /*char fileBuffer[MAXMESG],*/ std::string fileName) {
-	std::cout<< "In tftp::SendFile()"<<std::endl;
+// Parameters: char *progname, int sockfd, struct sockaddr_in receiving_addr, int clilen, char buffer[MAXMESG], std::string fileName
+//
+// Post: Stores all the data of a file with the provided std::string fileName, and sends them all to the sockaddr_in receiving_addr.
+//		 A linear send and wait for ACK process.
+void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_addr, int clilen, char buffer[MAXMESG], std::string fileName) {
+	// Initialize related variables
+	// Find necessary number of packets to send all the file's data
 	int numberOfRequiredPackets = GetNumberOfRequeiredPackets(fileName);
 	char packetsList[numberOfRequiredPackets][MAXMESG];
 	for (int i = 0; i < numberOfRequiredPackets; i++) {
 		bzero(packetsList[i], MAXMESG);
 	}
 
-	std::cout << "File Name:" << fileName <<std::endl;
-
 	// open file
 	FILE* file = fopen(fileName.c_str(), "r");
-
-	if (file == NULL) {
+	if (file == NULL) { // If opening the file causes an error, send error packet
 		// create ERROR packet
 		bzero(buffer, sizeof(buffer));
 		std::cout<< "creating ERROR packet" <<std::endl;
 		unsigned short opValue = ERROR;
 		unsigned short* buffPtr = (unsigned short *) buffer;
 		*buffPtr = htons(opValue);
-		std::cout<< "OP is: " << opValue <<std::endl;
 		buffPtr++;
 
-		if (errno == ENOENT) {
+		if (errno == ENOENT) { // File does not exist
 			tftp::CreateErrorPacketHelper(buffPtr, NO_FILE, "File not found.");
-		} else if (errno == EACCES){
+		} else if (errno == EACCES){ // No permission to access file
 			tftp::CreateErrorPacketHelper(buffPtr, NO_ACCESS, "Access violation.");
-		} else {
-			// errno is UNDEFINED
+		} else { // Some other undefined error
 			tftp::CreateErrorPacketHelper(buffPtr, UNDEFINED, "Undefined error.");
 		}
 
 		// Send the ERROR packet
 		std::cout<< "sending ERROR packet" <<std::endl;
 		tftp::SendPacketHelper(progname, sockfd, buffer, receiving_addr);
-
 		exit(13);
 	}
 
-	std::cout<< "file exists" <<std::endl;
-
-	// create data packets
+	// create all data packets at the same time
+	// iterator counter to track where in the file to continue for the next packet
 	int fileStartIterator = 0;
-	std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
 	for (int i = 0; i < numberOfRequiredPackets; i++) {
 		bzero(packetsList[i], (MAXMESG));
 		char* bufpoint = packetsList[i];
 
-		std::cout<< "creating data packet" <<std::endl;
-
+		// Creating data packet
 		unsigned short opValue = DATA;
 		unsigned short* opCodePtr = (unsigned short *) packetsList[i];
 		*opCodePtr = htons(opValue);
-		std::cout<< "OP:";
-		std::cout << opValue <<std::endl;
-
 		opCodePtr++; // move pointer to block number
-		std::cout<< "Block#:";
 		unsigned short blockNumber = i + 1; // temporary for testing
 		*opCodePtr = htons(blockNumber);
-		std::cout << blockNumber <<std::endl;
-
 		bufpoint = packetsList[i] + 4; // move pointer to file name
 
+		// copy file data into the packet data
 		int n = fread(bufpoint, MAXDATA, 1, file);
+		// iterator value for next packet
 		fileStartIterator += n;
 		if (n < 0) {
-			std::cout<< "read error:" << n <<std::endl;
-		} else {
-			std::cout << "read successful:" << n << std::endl;
+			std::cout<< "Read error:" << n <<std::endl;
 		}
-
-		std::cout<< "fileStartIterator:" <<fileStartIterator<<std::endl;
-		PrintPacket(packetsList[i]);
 	}
 	// close file
 	fclose(file); // once finish reading whole file, close text file
-	std::cout<< "closed file"<<std::endl;
 
-
+	std::cout<< "Sending Data Packet(s)"<<std::endl;
+	// Send all the data packets to the target machine
 	for (int i = 0; i < numberOfRequiredPackets; i++) {
 		// Send the data packet
-		std::cout<< "sending data packet" <<std::endl;
 		tftp::SendPacketHelper(progname, sockfd, packetsList[i], receiving_addr);
 
 		// timeout implementation
@@ -139,7 +120,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 		signal(SIGALRM,sig_handler); // Register signal handler
 		siginterrupt( SIGALRM, 1 );
 
-		while (true) {
+		while (true) { // Wait until the target machine returns all ACK packets, or until a timeout occurs
 			bzero(buffer, sizeof(buffer));
 
 			alarm(TIMEOUT_TIME); // set timer
@@ -159,12 +140,10 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 					exit(4);
 				}
 			}
-			std::cout << "received something" << std::endl;
 			alarm(0); // turn off alarm
 			timeoutCount = 1;
 
 			// check if received packet is the ack
-			PrintPacket(buffer);
 			unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
 			if (ackOpNumb == ACK && tftp::GetBlockNumber(buffer) == (i+1)) {
 				std::cout<< "ACK received. Transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
@@ -177,6 +156,9 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
 	}
 }
 
+// Parameters: char *progname, int sockfd, struct sockaddr_in pcli_addr
+//
+// Post: A helper function to send an error letting the sockaddr_in pcli_addr know that a file already exists
 void tftp::SendFileAlreadyExistsError(char *progname, int sockfd, struct sockaddr_in pcli_addr) {
 	// create ERROR packet
 	char errBuff[MAXMESG];
@@ -193,37 +175,39 @@ void tftp::SendFileAlreadyExistsError(char *progname, int sockfd, struct sockadd
 	exit(9);
 }
 
+// Parameters: char *progname, int sockfd, struct sockaddr_in sending_addr, char ackBuffer[MAXMESG], std::string fileNameString
+//
+// Post: Receives all the data of a file with the provided std::string fileNameString.
+//		 A linear wait to receive and send corresponding ACK process.
 void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_addr, char ackBuffer[MAXMESG], std::string fileNameString) {
-	std::cout<< "In tftp::ReceiveFile()"<<std::endl;
 	// check file exists
 	std::ifstream infile(fileNameString);
 	if (infile.good()){
 		tftp::SendFileAlreadyExistsError(progname, sockfd, sending_addr);
 	}
 
-	std::cout<< "file does not exist, creating file of same name"<<std::endl;
+	// Create new .txt file with same name
 	// help from: https://stackoverflow.com/questions/478075/creating-files-in-c
 	FILE* file = fopen(fileNameString.c_str(), "w");
 
+	// Initialize local variables
 	char buffer[MAXMESG];
-	// fill buffer with information to enter while loop
+	// fill buffer with dummy information to enter while loop
 	for (int i = 0; i < MAXMESG; i++) {
 		buffer[i] = '.';
 	}
 	unsigned short expectedBlockNum = 1;
-
 	int rcvlen = sizeof(struct sockaddr);
 
+	// time out implementation
 	timeoutCount = 1;
 	signal(SIGALRM,sig_handler); // Register signal handler
 	siginterrupt( SIGALRM, 1 );
 
-	while (!tftp::CheckIfLastDataPacket(buffer)) {
+	while (!tftp::CheckIfLastDataPacket(buffer)) { // Keep going until received the last DATA packet, or a timeout
 		// empty buffer of any previous data
 		bzero(buffer, MAXMESG);
-
 		alarm(TIMEOUT_TIME);
-
 		int n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &sending_addr, (socklen_t*)&rcvlen);
 		if (n < 0) {
 			std::cout<< "recvfrom value is -1"<<std::endl;
@@ -239,19 +223,16 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 				exit(4);
 			}
 		}
-
-		std::cout << "received something" << std::endl;
 		alarm(0); // turn off alarm
 		timeoutCount = 0;
 
 		// get its op code to determine packet type
 		unsigned short opValue = tftp::GetPacketOPCode(buffer);
-		if (opValue == ERROR) {
+		if (opValue == ERROR) { // Print error message and exit
 			unsigned short errorCode = GetBlockNumber(buffer);
 			char* bufpoint = buffer + 4;
 			int errMsgLength = 0;
 			for (int i = 4; i < MAXMESG; i++) {
-				std::cout << buffer[i];
 				if (buffer[i] == NULL) {
 					break;
 				}
@@ -266,8 +247,7 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 		if (opValue == DATA) {
 			// get packet block number
 			unsigned short receivedBlockNum = tftp::GetBlockNumber(buffer);
-
-			if (receivedBlockNum == expectedBlockNum) {
+			if (receivedBlockNum == expectedBlockNum) { // if received expected block number, write data to file
 				//write packet to file
 				char* bufpoint = buffer + 4;
 				int writeSize = 0;
@@ -278,7 +258,6 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 					writeSize++;
 				}
 				fwrite(bufpoint, writeSize, 1, file);
-
 				expectedBlockNum++;
 			}
 			// regardless if expected packet, send ack packet of received block number
@@ -286,29 +265,27 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 			tftp::CreateAckPacket(ackBuffer, receivedBlockNum);
 
 			SendPacketHelper(progname, sockfd, ackBuffer, sending_addr);
-
 		}
 		else {
-			std::cout<< "unexpected OP code received:"<<opValue<<" ending process"<<std::endl;
+			std::cout<< "Unexpected OP code received:"<<opValue<<" ending process"<<std::endl;
 			exit(9);
 		}
 	}
-
 	// close file after leaving loop
 	fclose(file);
-
 }
 
-// return any packet as a string
+// Parameters: char buffer[MAXMESG]
+//
+// Post: Return any packet as a std::string
 std::string tftp::PacketToString(char buffer[MAXMESG]) {
+	// Initialize local variables
 	unsigned short opNumber = tftp::GetPacketOPCode(buffer);
-
 	std::string opStr;
 	unsigned short blockNumber = 0;
 	std::string blockStr;
 	std::string fileNameStr;
 	std::string modeStr;
-
 	std::string printResult;
 
 	if (opNumber == RRQ) {
@@ -349,13 +326,15 @@ std::string tftp::PacketToString(char buffer[MAXMESG]) {
 
 		printResult = opStr + errorCodeStr + errorMessageStr;
 	} else {
-		std::cout<< "Error. Unsupported OP code received:"<< opNumber <<std::endl;
+		std::cout<< "Error: Unsupported OP code received:"<< opNumber <<std::endl;
 		exit(6);
 	}
 	return printResult;
 }
 
-// print any and the entire packet to console
+// Parameters: char buffer[MAXMESG]
+//
+// Post: Print entire packet to console
 void tftp::PrintPacket(char buffer[MAXMESG]) {
 	std::cout<< "PRINTING CONTENT OF PACKET:"<<std::endl;
 	std::string printResult = PacketToString(buffer);
@@ -363,6 +342,9 @@ void tftp::PrintPacket(char buffer[MAXMESG]) {
 	std::cout<< "END OF PACKET PRINT" <<std::endl;
 }
 
+// Parameters: char buffer[MAXMESG]
+//
+// Post: Return packet's OP code as an unsigned short
 unsigned short tftp::GetPacketOPCode(char buffer[MAXMESG]) {
 	unsigned short* bufferTempPointer = nullptr;
 	bufferTempPointer = reinterpret_cast<unsigned short *>(buffer);
@@ -370,6 +352,9 @@ unsigned short tftp::GetPacketOPCode(char buffer[MAXMESG]) {
 	return opNumb;
 }
 
+// Parameters: char buffer[MAXMESG]
+//
+// Post: Return packet's block number as an unsigned short
 unsigned short tftp::GetBlockNumber(char buffer[MAXMESG]) {
 	unsigned short* bufferBPointer = nullptr;
 	bufferBPointer = reinterpret_cast<unsigned short *>(buffer + 2);
@@ -377,15 +362,21 @@ unsigned short tftp::GetBlockNumber(char buffer[MAXMESG]) {
 	return bNumber;
 }
 
+// Parameters: unsigned short number
+//
+// Post: Convert an unsigned short and return it as an std::string
 // help from: https://stackoverflow.com/questions/14871388/convert-from-unsigned-short-to-string-c/14871427
 std::string tftp::ConvertUnsignedShortToString(unsigned short number) {
-	std::string result = "";
+	std::string result;
 	std::stringstream ss;
 	ss << number;
 	result = ss.str();
 	return result;
 }
 
+// Parameters: char buffer[MAXMESG]
+//
+// Post: Return packet's file name as an std::string
 std::string tftp::GetFileNameStr(char buffer[MAXMESG]) {
 	char* bufpoint = buffer + 2;
 	int fileNameLength = 0;
@@ -401,6 +392,9 @@ std::string tftp::GetFileNameStr(char buffer[MAXMESG]) {
 	return result;
 }
 
+// Parameters: char buffer[MAXMESG], std::string fileName
+//
+// Post: Return the mode of the RRQ/WRQ packet as an std::string
 std::string tftp::GetMode(char buffer[MAXMESG], std::string fileName) {
 	std::string result = "";
 	int modeCharLength = 0;
@@ -419,6 +413,9 @@ std::string tftp::GetMode(char buffer[MAXMESG], std::string fileName) {
 	return result;
 }
 
+// Parameters: char buffer[MAXMESG], char (& dataArray)[MAXDATA]
+//
+// Post: Store the data from buffer into dataArray
 // pass char[] by reference help from: https://stackoverflow.com/questions/12987760/passing-char-array-by-reference
 void tftp::GetDataContent(char buffer[MAXMESG], char (& dataArray)[MAXDATA]) {
 	for (int i = 4; i < MAXMESG; i++) {
@@ -429,26 +426,31 @@ void tftp::GetDataContent(char buffer[MAXMESG], char (& dataArray)[MAXDATA]) {
 	}
 }
 
+// Parameters: std::string filename
+//
+// Post: Return number of needed packets to send all the data from the file as an int
 int tftp::GetNumberOfRequeiredPackets(std::string filename) {
 	std::ifstream file( filename, std::ios::binary | std::ios::ate);
 	int fileSize = file.tellg();
 	std::cout<< "File size:" << fileSize << " Bytes" <<std::endl;
 
 	if (fileSize < MAXDATA) {
-		std::cout<< "only need one packet to send all of the data"<<std::endl;
+		std::cout<< "File requires 1 packet"<<std::endl;
 		return 1;
 	}
 	int numberOfPackets = (fileSize / MAXDATA) + 1;
-	std::cout<< "file requires: " <<numberOfPackets << " number of packets"<<std::endl;
+	std::cout<< "File requires: " <<numberOfPackets << " number of packets"<<std::endl;
 	return numberOfPackets;
 }
 
+// Parameters: char buffer[MAXMESG]
+//
+// Post: Return bool if the passed packet is the last packet
 bool tftp::CheckIfLastDataPacket(char buffer[MAXMESG]) {
 	bool result = false;
 	if (tftp::GetPacketOPCode(buffer) != DATA) {
 		return result;
 	}
-
 	int dataLength = 0;
 	for (int i = 4; i < MAXMESG; i++) {
 		if (buffer[i] == NULL) {
@@ -462,6 +464,9 @@ bool tftp::CheckIfLastDataPacket(char buffer[MAXMESG]) {
 	return result;
 }
 
+// Parameters: char buffer[MAXMESG], unsigned short blockNumber
+//
+// Post: Create an ACK packet and store it in buffer
 void tftp::CreateAckPacket(char buffer[MAXMESG], unsigned short blockNumber) {
 	bzero(buffer, MAXMESG);
 
@@ -474,25 +479,31 @@ void tftp::CreateAckPacket(char buffer[MAXMESG], unsigned short blockNumber) {
 	*ackBlockPtr = htons(ackBlockValue);
 }
 
+// Parameters: char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr
+//
+// Post: Send packet buffer to the target sockaddr_in receiving_addr
 void tftp::SendPacketHelper(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr) {
 	int n = sendto(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 	if (n < 0) {
 		printf("%s: sendto error\n",progname);
 		exit(4);
-	} else {
-		std::cout<< "no issue sending packet" <<std::endl;
 	}
 }
 
+// Parameters: unsigned short* buffPtr, unsigned short errorCode, std::string errorMessage
+//
+// Post: Creates Error packet and stores in buffPtr
 void tftp::CreateErrorPacketHelper(unsigned short* buffPtr, unsigned short errorCode, std::string errorMessage) {
-	unsigned short myErrorCode = errorCode;
 	*buffPtr = htons(errorCode);
-
 	buffPtr++;
 	std::string myErrorMessage = errorMessage;
 	strcpy((char*)buffPtr, myErrorMessage.c_str());
 }
 
+// Parameters: char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr
+//
+// Post: Public version of tftp::SendPacketHelper().
+//		 Send packet buffer to the target sockaddr_in receiving_addr
 void tftp::SendPacket(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr) {
 	tftp::SendPacketHelper(progname, sockfd, buffer, receiving_addr);
 }

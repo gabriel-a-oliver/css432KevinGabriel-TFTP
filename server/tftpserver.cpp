@@ -2,7 +2,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdlib.h>
-#include <string.h>
 #include "tftp.cpp"
 #include <iostream>
 #include <string>
@@ -10,9 +9,15 @@
 
 #define MAX_CLIENT_CONNECTIONS 11
 
+//
 char *progname;
 
-void SendAckZeroPacket(char (& ackBuffer)[MAXMESG], int sockfd, struct sockaddr_in pcli_addr) {
+// Parameters: char (& ackBuffer)[MAXMESG], int sockfd,
+//					   struct sockaddr_in pcli_addr
+//
+// Post: Send initial ACK packet for WRQ operations
+void SendAckZeroPacket(char (& ackBuffer)[MAXMESG], int sockfd,
+					   struct sockaddr_in pcli_addr) {
 	unsigned short ackOpValue = ACK;
 	unsigned short* ackOpCodePtr = (unsigned short *) ackBuffer;
 	*ackOpCodePtr = htons(ackOpValue);
@@ -21,16 +26,20 @@ void SendAckZeroPacket(char (& ackBuffer)[MAXMESG], int sockfd, struct sockaddr_
 	unsigned short* ackBlockPtr = (unsigned short *) ackBuffer + 1;
 	*ackBlockPtr = htons(ackBlockValue);
 
-	tftp::PrintPacket(ackBuffer);
-
-	int n = sendto(sockfd, ackBuffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
+	int n = sendto(sockfd, ackBuffer, MAXMESG, 0,
+				   (struct sockaddr *) &pcli_addr, sizeof(pcli_addr));
 	if (n < 0) {
 		printf("%s: sendto error\n",progname);
 		exit(4);
 	}
 }
 
-void* OperateWithClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcli_addr, int clilen) {
+// Parameters: char buffer[MAXMESG], int sockfd,
+//						struct sockaddr_in pcli_addr, int clilen
+//
+// Post: Perform RRQ or WRQ operations with client
+void OperateWithClient(char buffer[MAXMESG], int sockfd,
+						struct sockaddr_in pcli_addr, int clilen) {
 	unsigned short opNumber = tftp::GetPacketOPCode(buffer);
 	if (opNumber == RRQ) {
 		std::string fileName = tftp::GetFileNameStr(buffer);
@@ -48,6 +57,7 @@ void* OperateWithClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcl
 		std::ifstream infile(fileNameString);
 		if (infile.good()) {
 			tftp::SendFileAlreadyExistsError(progname, sockfd, pcli_addr);
+			exit(9);
 		}
 
 		// Send initial ACK packet to let the client know the server is ready to receive DATA packets
@@ -56,14 +66,17 @@ void* OperateWithClient(char buffer[MAXMESG], int sockfd, struct sockaddr_in pcl
 		SendAckZeroPacket(ackBuffer, sockfd, pcli_addr);
 
 		//call ReceiveFile and wait for DATA from client
-		tftp::ReceiveFile(progname, sockfd, pcli_addr, ackBuffer, fileNameString);
+		tftp::ReceiveFile(progname, sockfd, pcli_addr,
+						  ackBuffer, fileNameString);
 	} else {
 		std::cout<< "Error: Unsupported OP Code Received:"<< opNumber <<std::endl;
 		exit(10);
 	}
-	return nullptr;
 }
 
+// Parameters: int serv_udp_port
+//
+// Post: Set up socket and port connection to the specified serv_udp_port
 int SetUpSocket(int serv_udp_port) {
 	struct sockaddr_in serv_addr;
 	int socketfd;
@@ -78,13 +91,19 @@ int SetUpSocket(int serv_udp_port) {
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(serv_udp_port);
 
-	if (bind(socketfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+	if (bind(socketfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
 		printf("%s: can't bind local address for main\n",progname);
 		exit(3);
 	}
 	return socketfd;
 }
 
+// Parameters: int sockfd
+//
+// Main Loop must be ended manually unless an error or timeout occurs
+//
+// Post: Main Loop to stay open to client connections and start
+// 		 RRQ and WRQ operations
 void ClientConnectionsLoop(int sockfd) {
 	int n, clilen;
 	char buffer[MAXMESG];
@@ -96,7 +115,8 @@ void ClientConnectionsLoop(int sockfd) {
 
 		clilen = sizeof(struct sockaddr_in);
 
-		n = recvfrom(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr, (socklen_t*)&clilen);
+		n = recvfrom(sockfd,buffer, MAXMESG, 0, (struct sockaddr *) &pcli_addr,
+					(socklen_t*)&clilen);
 		if (n < 0) {
 			printf("%s: recvfrom error\n",progname);
 			exit(4);
@@ -112,22 +132,27 @@ void ClientConnectionsLoop(int sockfd) {
 		if (pid == 0) {
 			int forkedSockfd = SetUpSocket(0);
 			OperateWithClient(buffer, forkedSockfd, pcli_addr, clilen);
+			std::cout<< "Request Operation Complete"<<std::endl;
 			exit(7);
 		}
 	}
 }
 
+// Parameters: int argc, char *argv[]
+//
+// Post: Checks if command-line arguments are legal
 void CheckForValidArguments(int argc, char *argv[]) {
 	if (argc != 2) {
 		printf("%s: invalid number of arguments\n",progname);
 		exit(1);
 	}
 
-	progname=argv[0];
 	if (argv[1] == nullptr || std::stoi(argv[1]) == NULL) {
 		printf("%s: invalid server port number\n",progname);
 		exit(1);
 	}
+
+	progname=argv[0];
 }
 
 // Parameters: int argc, char *argv[]
@@ -140,6 +165,9 @@ void CheckForValidArguments(int argc, char *argv[]) {
 //
 // Post: Establishes a server for client connections
 // 		 to perform Read or Write Requests.
+//		 Server will perform in an endless loop
+//		 and can only be stopped manually, unless
+//		 encountered an error.
 int main(int argc, char *argv[]) {
 	std::cout << "Starting tftpserver Program" << std::endl;
 	CheckForValidArguments(argc, argv);
