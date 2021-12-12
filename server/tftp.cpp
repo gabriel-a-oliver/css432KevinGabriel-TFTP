@@ -167,7 +167,7 @@ void tftp::SendFile(char *progname, int sockfd, struct sockaddr_in receiving_add
             PrintPacket(buffer);
             unsigned short ackOpNumb = tftp::GetPacketOPCode(buffer);
             if (ackOpNumb == ACK && tftp::GetBlockNumber(buffer) == (i+1)) {
-                std::cout<< "ACH received. Transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
+                std::cout<< "ACK received. Transaction complete for block:"<< tftp::GetBlockNumber(buffer) <<std::endl;
                 break;
             } else {
                 std::cout<< "No correct ACK received. Received:"<<ackOpNumb<<std::endl;
@@ -253,7 +253,6 @@ void tftp::ReceiveFile(char *progname, int sockfd, struct sockaddr_in sending_ad
 	        for (int i = 4; i < MAXMESG; i++) {
 		        std::cout << buffer[i];
 		        if (buffer[i] == NULL) {
-			        std::cout<< "null found in getting ErrMsg"<<std::endl;
 			        break;
 		        }
 		        errMsgLength++;
@@ -476,7 +475,6 @@ void tftp::CreateAckPacket(char buffer[MAXMESG], unsigned short blockNumber) {
 }
 
 void tftp::SendPacketHelper(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr) {
-	std::cout<< "in tftp::SendPacketHelper()"<<std::endl;
 	int n = sendto(sockfd, buffer, MAXMESG, 0, (struct sockaddr *) &receiving_addr, sizeof(receiving_addr));
 	if (n < 0) {
 		printf("%s: sendto error\n",progname);
@@ -493,4 +491,8 @@ void tftp::CreateErrorPacketHelper(unsigned short* buffPtr, unsigned short error
 	buffPtr++;
 	std::string myErrorMessage = errorMessage;
 	strcpy((char*)buffPtr, myErrorMessage.c_str());
+}
+
+void tftp::SendPacket(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr) {
+	tftp::SendPacketHelper(progname, sockfd, buffer, receiving_addr);
 }

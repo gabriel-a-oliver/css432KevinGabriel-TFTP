@@ -130,6 +130,16 @@ void CheckForValidArguments(int argc, char *argv[]) {
 	}
 }
 
+// Parameters: int argc, char *argv[]
+//
+// Command-Line Arguments MUST BE PASSED IN THIS ORDER:
+// ./tftpserver <port number>
+//
+// The server will timout out of an operation
+// if the client loses connection or closes.
+//
+// Post: Establishes a server for client connections
+// 		 to perform Read or Write Requests.
 int main(int argc, char *argv[]) {
 	std::cout << "Starting tftpserver Program" << std::endl;
 	CheckForValidArguments(argc, argv);

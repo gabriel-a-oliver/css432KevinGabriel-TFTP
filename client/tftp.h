@@ -40,7 +40,7 @@ public:
 	static bool CheckIfLastDataPacket(char buffer[MAXMESG]);
 	static void CreateAckPacket(char buffer[MAXMESG], unsigned short blockNumber);
 	static void SendFileAlreadyExistsError(char *progname, int sockfd, struct sockaddr_in pcli_addr);
-
+	static void SendPacket(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr);
 private:
 	static void SendPacketHelper(char* progname, int sockfd, char buffer[MAXMESG], struct sockaddr_in receiving_addr);
 	static void CreateErrorPacketHelper(unsigned short* buffPtr, unsigned short errorCode, std::string errorMessage);

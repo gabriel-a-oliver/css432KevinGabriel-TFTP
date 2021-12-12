@@ -19,8 +19,10 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftp.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/tftpclient.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/client/tftpclient.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/tftp.h" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftp.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/tftpserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/server/tftpserver.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +127,7 @@
       <workItem from="1638825117628" duration="1359000" />
       <workItem from="1638854746846" duration="2167000" />
       <workItem from="1638987180771" duration="404000" />
-      <workItem from="1639248800446" duration="14045000" />
+      <workItem from="1639248800446" duration="21499000" />
     </task>
     <servers />
   </component>
